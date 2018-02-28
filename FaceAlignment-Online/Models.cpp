@@ -3,7 +3,8 @@
 ///////////////////////////////////////// Blendshape Model ///////////////////////////////////////////////
 //加载所有从faceshift得到的mesh.obj
 //加载blendshape，bs由n个mesh组成
-void Blendshape::LoadBs(std::string bs_folder, int nBs) {
+void Blendshape::LoadBs(std::string bs_folder, int nBs) 
+{
 	nBs_ = nBs;
 	Mesh obj_mesh;
 	std::string bs_file;
@@ -69,7 +70,7 @@ void Blendshape::LoadBsBin(std::string bs_file_bin, int nBs)
 }
 
 //通过传入一组系数来更新blendshape
-void Blendshape::UpdateMesh(std::vector<double> coef, Mesh& recons) 
+void Blendshape::UpdateMesh(std::vector<double> coef, Mesh& recons) ////coef即params_
 {
 	float coef_f;
 	recons.position_.setZero();
@@ -82,18 +83,20 @@ void Blendshape::UpdateMesh(std::vector<double> coef, Mesh& recons)
 	return;
 }
 
-//传入的是landmarker对应的模型顶点的index，然后将blendshape中每个模型的对应landmarker点坐标值保存在landmarkers_model_中。三维坐标
+//传入的是landmarker对应的模型顶点的index，然后将blendshape中每个模型的对应landmarker点坐标值保存在
+//landmarkers_model_中。三维坐标
 void Blendshape::ProjectLandmark(std::vector<int> index3D) 
 {
 	this->landmarks_model_.resize(index3D.size());
 	std::vector<Eigen::Vector3d> model_i;
 	Eigen::Vector3d pos_i;
-	model_i.resize(nBs_ + 1);
+	model_i.resize(nBs_ + 1);//除了51个表情还要加上自然表情1个
 	for (int ii = 0; ii < index3D.size(); ii++) 
 	{
 		for (int kk = 0; kk < nBs_ + 1; kk++) 
 		{
-			pos_i(0) = this->blendshapes_[kk].position_(index3D[ii], 0);
+			//position_是一个nVert_in行3列的数据
+			pos_i(0) = this->blendshapes_[kk].position_(index3D[ii], 0);//第index3D[ii]行第0列，因为总数据有很多几万行每个mesh，我们只要landmark对应的那几行
 			pos_i(1) = this->blendshapes_[kk].position_(index3D[ii], 1);
 			pos_i(2) = this->blendshapes_[kk].position_(index3D[ii], 2);
 			model_i[kk] = pos_i;

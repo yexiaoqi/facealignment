@@ -48,6 +48,11 @@ void GLRender::GetThumb(cv::Mat & disp)
 	int height = win_size_[1];
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
 	unsigned char* colorDisp = new unsigned char[4 * width * height];
+	//glReadPixels：读取一些像素。当前可以简单理解为“把已经绘制好的像素（它可能已经被保存到显卡的显存中）读取到内存”
+	//七个参数表示一个指针，像素数据被读取后，将被保存到这个指针所表示的地址。注意，需要保证
+	//该地址有足够的可以使用的空间，以容纳读取的像素数据。例如一幅大小为256*256的图象，如果读
+	//取其RGB数据，且每一数据被保存为GLubyte，总大小就是：256*256*3 = 196608字节，即192千字节
+	//。如果是读取RGBA数据，则总大小就是256*256*4 = 262144字节，即256千字节。
 	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colorDisp);
 	cv::Mat _tmp = cv::Mat(height, width, CV_8UC4, colorDisp);
 	_tmp.copyTo(this->render_color_);

@@ -4,8 +4,8 @@
 #include <iostream>
 #include <fstream>
 
-void ObjMesh::load_obj(std::string filename) {
-
+void ObjMesh::load_obj(std::string filename) 
+{
 	// prepare all the prefixs
 	std::vector<double> coords;
 	std::vector<int> tris;

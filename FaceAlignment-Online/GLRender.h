@@ -35,7 +35,8 @@ public:
 	void addSphere(SolidSphere& model, int modelIdx) { spheres[modelIdx] = model; }
 	void deleteModel(int modelIdx) { models.erase(modelIdx); }
 	void deleteSphere(int spIdx) { this->spheres.erase(spIdx); }
-	void Render() {
+	void Render() 
+	{
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
 		int w = win_size_[0];
 		int h = win_size_[1];
@@ -49,17 +50,20 @@ public:
 		// glShadeModel( GL_SMOOTH ); 
 
 		// render bg and model
-		for (int kk = 0; kk < models.size(); kk++) {
+		for (int kk = 0; kk < models.size(); kk++) 
+		{
 			this->models[kk].Draw();
 		}
 		// render sphere
-		for (int kk = 0; kk < spheres.size(); kk++) {
+		for (int kk = 0; kk < spheres.size(); kk++) 
+		{
 			this->spheres[kk].Draw();
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void RenderFace() {
+	void RenderFace() 
+	{
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
 		int w = win_size_[0];
 		int h = win_size_[1];

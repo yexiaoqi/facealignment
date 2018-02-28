@@ -14,11 +14,10 @@
 ArgParser mParser;
 GLRender mGLRender;
 SingleImageReconstructor mImgRecon;
-//PyStream mPyStream;
 ModelParametersBs_Video mVideoRes;
 ModelParametersBs mFrameRes;
 cv::VideoCapture mCap;
-int mEnableStream = 0;
+//int mEnableStream = 0;
 cv::Mat mFrame;
 int nFps, nFrame, frameCnt, meshCnt;
 // OpenGL
@@ -51,6 +50,7 @@ std::vector<std::vector<cv::Point2d>> videoPts2D;
 void loadVideoPts2D(std::string pts2d_file);
 std::vector<cv::Point2d> getPts2D(int nIdx);
 ///////////////////////////////// Viewer Functions (Don't Modify) /////////////////////////////////////////
+//用正交投影和视点信息鼠标坐标映射到世界坐标
 void pos(double *px, double *py, double *pz, const int x, const int y, const int *viewport)
 {
 	/*
@@ -73,8 +73,8 @@ void pos(double *px, double *py, double *pz, const int x, const int y, const int
 	*pz = _zNear;
 }
 
-void Reset() {
-
+void Reset() 
+{
 	mouseX = 0;       //mouse control variables
 	mouseY = 0;
 	mouseLeft = false;
@@ -113,6 +113,7 @@ void onMouseCallback(int button, int state, int x, int y)
 	pos(&dragPosX, &dragPosY, &dragPosZ, x, y, viewport);
 }
 
+//    鼠标左右键可以控制模型旋转，鼠标中键可以控制模型缩放
 void MotionCallback(int x, int y)
 {
 
@@ -190,12 +191,14 @@ void MotionCallback(int x, int y)
 	}
 }
 
-void CloseCallback() {
+void CloseCallback() 
+{
 	std::cout << "GLUT:\t Finished" << std::endl;
 	glutLeaveMainLoop();
 }
 
-void ReshapeCallback(int w, int h) {
+void ReshapeCallback(int w, int h) 
+{
 
 	////////////////////////////////////////////
 	int winWidth = gWinWidth;
@@ -222,49 +225,55 @@ int main(int argc, char *argv[])
 {
 
 	// Parse Args
-	mParser.Parse(argc, argv);
-	std::string m_indexFile = mParser.get_indexFile();
-	std::string m_videoInput = mParser.get_videoInput();
+	mParser.Parse(argc, argv);//解析参数  调用Parse(int argc, char* argv[])	这里选择输入文件为default.conf	
+  //（实际先只输入了indexfile，bsfolder，videoinput，bsnames，bsindex，indexfile和landmarkfile一样）
+
+	std::string m_indexFile = mParser.get_indexFile();//得到indexfile  data/jisy-20161215/68markers.txt
+	std::string m_videoInput = mParser.get_videoInput(); // 得到videoinput  data/video/2.mov
 	//std::cout << m_videoInput; //added by yqy
-	std::string m_bsModelBin = mParser.get_bsModelBin();
+	std::string m_bsModelBin = mParser.get_bsModelBin();//得到bsModelBin//暂时为空
 	//std::cout <<"1111111111"<< m_bsModelBin << std::endl;//added by yqy
-	std::string m_landmarkFile = mParser.get_landmarkFile();//commented by yqy
-	std::string m_bsCoefs = mParser.get_bsCoefficients();
-	std::cout <<"m_bsCoefs:" <<m_bsCoefs << std::endl;
-	std::string m_bsNames = mParser.get_bsNames();
-	std::string m_bsIndex = mParser.get_bsIndex();
+	//std::string m_landmarkFile = mParser.get_landmarkFile();//commented by yqy
+	//std::string m_bsCoefs = mParser.get_bsCoefficients();//为空
+	//std::cout <<"m_bsCoefs:" <<m_bsCoefs << std::endl;
+	//std::string m_bsNames = mParser.get_bsNames();//  得到51个bs表情名字如Neutral，EyeBlink_L，EyeBlink_R  data/list_51.txt
+	//std::string m_bsIndex = mParser.get_bsIndex();//得到和m_bsNames对应的bs索引号 data/bsIndex.txt
 	int m_numLandmark = mParser.get_numLandmark();//m_numLandmark来自configFile中inputLine >> m_numLandmark_; 为68
-	int m_numBs = mParser.get_numBs();
+	int m_numBs = mParser.get_numBs();//numBs = 51
 	int m_cameraIndex = mParser.get_cameraIndex();
-	mEnableStream = mParser.get_enableStream();
-	std::string m_bsFolder = mParser.get_bsFolder();
+	//mEnableStream = mParser.get_enableStream();
+	std::string m_bsFolder = mParser.get_bsFolder();//得到bsfolder  data/model_yqy_20170330_tri  即从faceshift得到的mesh网格
 	std::cout << m_bsFolder << std::endl;
-	std::string m_landmarkFolder = mParser.get_landmarkFolder();
+	//std::string m_landmarkFolder = mParser.get_landmarkFolder();//得到landmarkfolder
 	// load blendshape
-	if (!m_bsModelBin.empty())
+	if (!m_bsModelBin.empty())//    if m_bsModelBin非空：调用Models中的LoadBsBin
 		mImgRecon.bsData_.LoadBsBin(m_bsModelBin, m_numBs);
-	else
-		mImgRecon.bsData_.LoadBs(m_bsFolder, m_numBs);
-	mImgRecon.recon_mesh_ = mImgRecon.bsData_.blendshapes_[0];//neural表情模型作为recon_mesh
-	mImgRecon.recon_mesh_.update_normal();
+	else//else 调用Models中的LoadBs（初次加载肯定进else）
+		mImgRecon.bsData_.LoadBs(m_bsFolder, m_numBs);//bsFolder =data/model_yqy_20170330_tri 加载51个.obj文件
+	mImgRecon.recon_mesh_ = mImgRecon.bsData_.blendshapes_[0];//neural表情模型作为recon_mesh  
+	//上面一句LoadBs中有blendshapes_.push_back(obj_mesh); blendshapes_就是一个mesh结构
+	mImgRecon.recon_mesh_.update_normal();//recon_mesh更新法线，根据面法线算出点法线
 	// load index3d
 	mImgRecon.numPts_ = m_numLandmark;//numPts_为68
-	mImgRecon.LoadIndex3D(m_indexFile);
+	mImgRecon.LoadIndex3D(m_indexFile);//加载index3d得到index3D_ //从data/jisy-20161215/68markers.txt加载
 	// project landmark
-	mImgRecon.bsData_.ProjectLandmark(mImgRecon.index3D_);
+	mImgRecon.bsData_.ProjectLandmark(mImgRecon.index3D_);//通过index3D_将位置三维信息传给landmarks_model_
 	// open the video file
 
-	if (!m_videoInput.empty()){
+	if (!m_videoInput.empty())//if m_videoInput非空：调用opencv里的open输入视频和get帧数
+	{
 		mCap.open(m_videoInput);
 		nFrame = mCap.get(CV_CAP_PROP_FRAME_COUNT);
 	}
-	else{
+	else//else：调用opencv里的open相机索引，帧数为99999(如果是提前录好视频输入进if，实时拍摄进else）
+	{
 		mCap.open(m_cameraIndex);
 		nFrame = 99999;
 	}
 	//std::cout << "1111111111" << m_videoInput << std::endl;
-	nFps = mCap.get(CV_CAP_PROP_FPS);
+	nFps = mCap.get(CV_CAP_PROP_FPS);//  捕捉帧速率
 
+	//    定义旋转
 #ifdef ROTATE
 	int height = mCap.get(CV_CAP_PROP_FRAME_WIDTH);
 	int width = mCap.get(CV_CAP_PROP_FRAME_HEIGHT);
@@ -273,8 +282,10 @@ int main(int argc, char *argv[])
 	int height = mCap.get(CV_CAP_PROP_FRAME_HEIGHT);
 #endif // ROTATE
 
+	//得到宽和高
 	imgWidth = width;
 	imgHeight = height;
+	//输出帧速率，帧和视频大小
 	std::cout << "Fps of video is " << nFps << std::endl;
 	std::cout << "nFrame of video is " << nFrame << std::endl;
 	std::cout << "The size of video is " << width << " x " << height << std::endl;
@@ -283,16 +294,17 @@ int main(int argc, char *argv[])
 	gWinWidth = width * 2;
 	frameCnt = 0;
 	meshCnt = 0;
+	//  isOnline,isResultReview和isDraw2DLandmark为false
 	isOnline = false;
 	isResultReview = false;
 	isDraw2DLandmark = false;
-	if (!m_bsCoefs.empty()) 
-	{
-		isResultReview = true;
-		mVideoRes.LoadBsCoeff(m_bsCoefs, nFrame, false);
-	}
+	//if (!m_bsCoefs.empty()) //    if m_bsCoefs非空：isResultReview为true，调用LoadBsCoeff
+	//{
+	//	isResultReview = true;
+	//	mVideoRes.LoadBsCoeff(m_bsCoefs, nFrame, false);
+	//}
 
-	// Init OpenGL
+	// Init OpenGL   初始化OpenGL
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowPosition(0, 0);
@@ -300,10 +312,10 @@ int main(int argc, char *argv[])
 	glutCreateWindow("3D Face Fitting");
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 	glewInit();
-	glGenTextures(1, &textureIds); // left
+	glGenTextures(1, &textureIds); // left  产生指定数量的纹理对象(1个），并将他们的引用句柄放到GLuint数组指针（第二个参数）中
 	glGenTextures(1, &textureIdsFace); // right
 
-	// Register Callbacks
+	// Register Callbacks  各种callback
 	glutDisplayFunc(RenderCallback);
 	glutCloseFunc(CloseCallback);
 	glutReshapeFunc(ReshapeCallback);
@@ -312,52 +324,55 @@ int main(int argc, char *argv[])
 	glutMotionFunc(MotionCallback);
 	glutIdleFunc(NULL);
 
-	// Load Frame0 && Prepare Image Display
+	// Load Frame0 && Prepare Image Display  加载第一帧图像
 	mCap >> mFrame;
 #ifdef ROTATE
-	cv::transpose(mFrame, mFrame);//rotete 90d
+	cv::transpose(mFrame, mFrame);//rotate 90d  旋转90度
 	cv::flip(mFrame, mFrame, 1);//flip by y axis
 #endif // ROTATE
 
-	cv::imwrite("fisrstFrame.jpg", mFrame);
-	mImgRecon.SetInputImage(mFrame);
-	mImgRecon.Init();
-	mImgRecon.PrepareConstraints();
-	mImgRecon.LandmarkDetect(mImgRecon.input_img_);	
+	cv::imwrite("fisrstFrame.jpg", mFrame);//imwrite第一幅图像
+	mImgRecon.SetInputImage(mFrame);//设置行列
+	mImgRecon.Init();//初始化模型的位置
+	mImgRecon.PrepareConstraints();//把模型的位置传给constraints2D_，设置每个landmark的权重
+	mImgRecon.LandmarkDetect(mImgRecon.input_img_);	//调用dlib进行landmark检测并传给pts2D_
 	mFrame.copyTo(imageDisp);
-	if (isDraw2DLandmark) drawLandmark(imageDisp, mImgRecon.pts2D_, imgWidth, imgHeight);
+	if (isDraw2DLandmark) drawLandmark(imageDisp, mImgRecon.pts2D_, imgWidth, imgHeight);//if (isDraw2DLandmark) 显示landmark
 
+	//渲染初始化
+	//准备bg背景图
 	// Prepare Display Content for OpenGL Render ( Background & Mesh Model & Spheres )
 	mGLRender.Init(Eigen::Vector2i(imgWidth, imgHeight)); // render size = image size
 	// A. prepare bg ground image
-	mGLRender.addModel(BufModel(), 0);
-	mGLRender.models[0].CreateBGplaneModel();
-	mGLRender.models[0].LoadShaderProgram("shaders/background_vertex_shader.glsl", "shaders/background_fragment_shader.glsl");
+	mGLRender.addModel(BufModel(), 0);//增加模型，0是modelIdx
+	mGLRender.models[0].CreateBGplaneModel();//创建背景
+	mGLRender.models[0].LoadShaderProgram("shaders/background_vertex_shader.glsl", "shaders/background_fragment_shader.glsl");//加载着色器
 	mGLRender.models[0].BufCreateTexture(imgWidth, imgHeight);
-	mGLRender.models[0].BufUpdateTexture(imageDisp);
+	mGLRender.models[0].BufUpdateTexture(imageDisp);//创建与更新纹理
 	mGLRender.models[0].isDraw_ = true;
-	// B. prepare model
-	mGLRender.addModel(BufModel(), 1);
-	mGLRender.models[1].CreateDispModel(mImgRecon.recon_mesh_, false);
-	mGLRender.models[1].LoadShaderProgram("shaders/face_vertex_shader_dir.glsl", "shaders/face_fragment_shader_dir.glsl");
+	//   准备模型  B. prepare model
+	mGLRender.addModel(BufModel(), 1);//  增加模型
+	mGLRender.models[1].CreateDispModel(mImgRecon.recon_mesh_, false);//    创建dispmodel
+	mGLRender.models[1].LoadShaderProgram("shaders/face_vertex_shader_dir.glsl", "shaders/face_fragment_shader_dir.glsl");//加载着色器
 	mGLRender.models[1].isDraw_ = false;
 	mGLRender.models[1].colorMode_ = 0;
-	if (isResultReview) {		// if result review mode & update model
+	if (isResultReview) //if (isResultReview)：更新mesh，法线和dispmodel
+	{		// if result review mode & update model
 		mImgRecon.UpdateMesh(mVideoRes.bsVideo_[frameCnt].params_);
 		mImgRecon.recon_mesh_.update_normal();
 		mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);
 	}
-	// C. prepare spheres
-	mGLRender.addSphere(SolidSphere(), 0);
-	mGLRender.spheres[0].Init();
-	mGLRender.spheres[0].LoadShaderProgram("shaders/sphere_vertex_shader.glsl", "shaders/sphere_fragment_shader.glsl");
-	mImgRecon.UpdateLandmarkPos();	// update in single image reconstructor
-	mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_); // set data
+	// 准备参考球  C. prepare spheres
+	mGLRender.addSphere(SolidSphere(), 0);//  增加参考球
+	mGLRender.spheres[0].Init();//  加载参考球
+	mGLRender.spheres[0].LoadShaderProgram("shaders/sphere_vertex_shader.glsl", "shaders/sphere_fragment_shader.glsl");//    加载着色器
+	mImgRecon.UpdateLandmarkPos();	// 更新landmark位置update in single image reconstructor
+	mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_); // 设置3dlandmark数据set data
 	mGLRender.spheres[0].SetColor(1.f, 0.f, 0.f);
-	mGLRender.spheres[0].SetScale(0.01f);
+	mGLRender.spheres[0].SetScale(0.01f);//设置颜色和大小
 	mGLRender.spheres[0].exception_idx_ = -1;
 	mGLRender.spheres[0].drawSphere_ = false;
-	// 6 - Set Buffer Model's Model && View && Projection Matrix
+	//   设置缓冲器模型、视角和投影矩阵  6 - Set Buffer Model's Model && View && Projection Matrix
 	mGLRender.models[1].model_ = mImgRecon.model_mat_;
 	mGLRender.models[1].view_ = mImgRecon.camera_view_;
 	mGLRender.models[1].proj_ = mImgRecon.projection_;
@@ -468,10 +483,6 @@ void KeyboardCallback(unsigned char key, int x, int y)
 		//modelMat = glm::mat4(1.0);
 		break;
 	}
-	case 'v':
-	case 'V': {
-
-	}
 	case 's':
 	case 'S':{
 		// random blendshape model
@@ -508,7 +519,8 @@ void KeyboardCallback(unsigned char key, int x, int y)
 	{
 		// 1 - call fit
 		// fit accurately to first frame
-		if (frameCnt == 1){
+		if (frameCnt == 1)
+		{
 			//cv::imwrite("clx_001.bmp", mImgRecon.input_img_);
 			mImgRecon.recon_model_.ResetBsCoeff();
 			mImgRecon.OptimizeFocalLength();//jisy fix
@@ -547,15 +559,17 @@ void KeyboardCallback(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
-void RenderCallback() {
-
+void RenderCallback() 
+{
+	//确定窗口宽高，同时将mframe拷贝到mImgRecon.input_img_里
 	int winWidth = gWinWidth;
 	int winHeight = gWinHeight;
 	// Step-1 Process my events
-	if (isOnline && frameCnt < nFrame) {//jisy to do
+	if (isOnline && frameCnt < nFrame) //if 正在运行并且帧数未到总帧数：捕捉帧
+	{//jisy to do
 
 		mCap >> mFrame;//jisy rotate image 
-		
+	//  旋转	
 #ifdef ROTATE
 		mCap >> mFrame;//drop a frame
 		cv::transpose(mFrame, mFrame);//rotete 90d
@@ -563,47 +577,54 @@ void RenderCallback() {
 #endif // ROTATE
 
 		//cv::waitKey(10);
-		mImgRecon.SetInputImage(mFrame);
+		mImgRecon.SetInputImage(mFrame);//设置输入图像（宽=列，高=行）
 		// process dispImage
-		mFrame.copyTo(imageDisp);
-		mImgRecon.LandmarkDetect(mImgRecon.input_img_);
-		if (isDraw2DLandmark) drawLandmark(imageDisp, mImgRecon.pts2D_, imgWidth, imgHeight);
-		mGLRender.models[0].BufUpdateTexture(imageDisp);
-		if (!isResultReview) {
-			if (frameCnt == 1){
+		mFrame.copyTo(imageDisp);//  把mframe的都拷贝到imageDisp里
+		mImgRecon.LandmarkDetect(mImgRecon.input_img_);//  检测landmark
+		if (isDraw2DLandmark) drawLandmark(imageDisp, mImgRecon.pts2D_, imgWidth, imgHeight);//  if (isDraw2DLandmark)：画出landmark
+		mGLRender.models[0].BufUpdateTexture(imageDisp);//更新纹理
+		if (!isResultReview) 
+		{
+			if (frameCnt == 1)//if 第一帧：重置bs系数，优化焦距，第一帧图像优化（迭代十次）
+			{
 				mImgRecon.ResetParams();
 				mImgRecon.OptimizeFocalLength();//jisy fix
 				//this->recon_camera_.focal_
 				mImgRecon.FitFirstFrame();
 			}
-			else{
+			else//优化（只迭代一次）
+			{
 				mImgRecon.Fit();
 			}
 			mFrameRes = mImgRecon.recon_model_;
 			mVideoRes.bsVideo_.push_back(mFrameRes);
 		}
-		else {
+		else 
+		{
 			//poseParameters_frame_ = poseParameters_[frameCnt_];
 			mFrameRes = mVideoRes.bsVideo_[frameCnt];
 		}
-		mImgRecon.UpdateMesh(mFrameRes.params_);
-		mImgRecon.recon_mesh_.update_normal();
+
+		mImgRecon.UpdateMesh(mFrameRes.params_);//  更新mesh
+		mImgRecon.recon_mesh_.update_normal();//更新法线
 		//mImgRecon.UpdateModelMat();//mat translate
-		mImgRecon.UpdateProjectionMat();
-		mImgRecon.UpdateLandmarkPos();
-		mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);
-		mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_);
-		frameCnt++;
+		mImgRecon.UpdateProjectionMat();//更新投影矩阵
+		mImgRecon.UpdateLandmarkPos();//更新landmark位置
+		mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);//更新dispmodel
+		mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_);//设置参考球数据
+		frameCnt++;//帧递增
 
 	}
 
 	// Step-2 Call render
 	// 1. update model, view, projection matrix
-	for (int kk = 0; kk < mGLRender.models.size(); kk++) {
-		mGLRender.models[kk].model_ = mImgRecon.model_mat_ * modelMat;
+	for (int kk = 0; kk < mGLRender.models.size(); kk++) 
+	{
+		mGLRender.models[kk].model_ = mImgRecon.model_mat_ * modelMat;//model_mat_ = Tmat * Rmat旋转位移
 		mGLRender.models[kk].proj_ = mImgRecon.projection_;
 	}
-	for (int kk = 0; kk < mGLRender.spheres.size(); kk++) {
+	for (int kk = 0; kk < mGLRender.spheres.size(); kk++) 
+	{
 		mGLRender.spheres[kk].model_ = mImgRecon.model_mat_ *modelMat;
 		mGLRender.spheres[kk].proj_ = mImgRecon.projection_;
 	}
@@ -613,12 +634,12 @@ void RenderCallback() {
 	mGLRender.models[1].isDraw_ = true;
 	mGLRender.spheres[0].drawSphere_ = true;
 	mGLRender.RenderFace();
-	mGLRender.GetThumb(imageDispFace);
+	mGLRender.GetThumb(imageDispFace);//读取RGBA数据存到imageDispFace  右半边窗口
 	//cv::imwrite("imageDiapFace.jpg", imageDispFace);
 	mGLRender.models[1].isDraw_ = isDrawFace_old;  // render to left window
 	mGLRender.spheres[0].drawSphere_ = isDrawLandmark_old;
 	mGLRender.Render();
-	mGLRender.GetThumb(imageDisp);
+	mGLRender.GetThumb(imageDisp);//左半边窗口
 	/*****************************************************************************************
 							Step-3 Draw content on opengl window
 	*******************************************************************************************/
@@ -682,26 +703,30 @@ void RenderCallback() {
 }
 
 
-void drawLandmark(cv::Mat& disp, std::vector<cv::Point2d> pts, int width, int height) {
-
-	for (int kk = 0; kk < pts.size(); kk++) {
-
+void drawLandmark(cv::Mat& disp, std::vector<cv::Point2d> pts, int width, int height) 
+{
+	for (int kk = 0; kk < pts.size(); kk++) 
+	{
 		cv::circle(imageDisp, cv::Point((int)pts.at(kk).x, (int)pts.at(kk).y), 4, cv::Scalar(0, 255, 0), -1);//JISY : (height - y) -> y
 	}
 }
 
 // [Deprecated]
-void loadVideoPts2D(std::string pts2d_file){
-
+void loadVideoPts2D(std::string pts2d_file)
+{
 	videoPts2D.resize(nFrame);
 	std::ifstream fin(pts2d_file);
 	cv::Point2d pt2d;
-	if (fin.is_open()) {
-		for (int ii = 0; ii < nFrame; ii++){
-			for (int kk = 0; kk < FACESHAPE_PNTNUM; kk++) {
+	if (fin.is_open()) 
+	{
+		for (int ii = 0; ii < nFrame; ii++)
+		{
+			for (int kk = 0; kk < FACESHAPE_PNTNUM; kk++) 
+			{
 				fin >> pt2d.x >> pt2d.y;
 				pt2d.y = imgHeight - pt2d.y;
-				if (kk < mImgRecon.numPts_){
+				if (kk < mImgRecon.numPts_)
+				{
 					videoPts2D[ii].push_back(pt2d);
 				}
 			}
@@ -711,8 +736,8 @@ void loadVideoPts2D(std::string pts2d_file){
 	return;
 }
 
-std::vector<cv::Point2d> getPts2D(int nIdx){
-	
+std::vector<cv::Point2d> getPts2D(int nIdx)
+{
 	return videoPts2D[nIdx];
 }
 

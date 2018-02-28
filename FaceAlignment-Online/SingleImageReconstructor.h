@@ -20,7 +20,8 @@
 
 // Optimization Constraints
 template <typename T>
-struct Constraint {
+struct Constraint 
+{
 	Constraint() : vidx(-1), weight(1.0), data(T()) {}
 
 	std::vector<cv::Vec3f> basis_shape;

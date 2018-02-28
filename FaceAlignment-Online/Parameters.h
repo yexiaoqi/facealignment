@@ -76,7 +76,7 @@ struct ModelParametersBs_Video
 	//	resize model_bs
 	//	对每一帧中的每一个bs，读入model_bs
 	//	关闭
-	bool LoadBsCoeff(std::string bs_file, int nFrame, bool isBin);
+	//bool LoadBsCoeff(std::string bs_file, int nFrame, bool isBin);
 
 	//打开bs_file
 	//resize bsvideo的帧数

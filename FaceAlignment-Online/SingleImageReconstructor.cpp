@@ -736,8 +736,8 @@ void SingleImageReconstructor::FitFirstFrameGN(){
 void SingleImageReconstructor::Init() 
 {
 	// init camera parameters && model parameters
-	recon_model_.Init(NUM_BLENDSHAPE);
-	recon_camera_ = CameraParameters::DefaultParameters(imgWidth_, imgHeight_);
+	recon_model_.Init(NUM_BLENDSHAPE);//设置模型的初始位置，以及把51个模型的params_初始化
+	recon_camera_ = CameraParameters::DefaultParameters(imgWidth_, imgHeight_);//设置近远平面和宽高
 	std::cout << "default focal length is " << recon_camera_.focal_ << std::endl;
 	// default model, view, projection matrix
 	//recon_model_的Rx_等位移和旋转参数在Parameters.cpp中的Init里已经初始化，即模型的初始位置
@@ -759,7 +759,7 @@ void SingleImageReconstructor::Init()
 	//义近裁剪平面的左下角点和右上角点的三维空间坐标，即（left，bottom， - near）和（right，top， - near）
 	//; 最后一个参数far是远裁剪平面的离视点的距离值，其左下角点和右上角点空间坐标由函数根据透视投影原理自动生
 	//	成。near和far表示离视点的远近，它们总为正值(near / far 必须>0)。
-	//frustumLH(left, right, bottom, top, nearVal, farVal);
+	//frustumLH(left, right, bottom, top, nearVal, farVal);frustumLH计算了投影
 	projection_ = glm::frustum(-aspect, aspect, -1.0f, 1.0f, (float)focal, far_c);
 	//projection_ = glm::perspective(45.0f, (float)recon_camera_.imgSize_[0]/ (float)recon_camera_.imgSize_[1],focal,far_c);
 	// init pts3D
@@ -785,7 +785,7 @@ void SingleImageReconstructor::PrepareConstraints()
 	for (int kk = 0; kk < this->numPts_; kk++) 
 	{
 			int idx_3d = this->index3D_[kk];
-			float mean_px_3d = this->bsData_.landmarks_model_[kk][0](0);
+			float mean_px_3d = this->bsData_.landmarks_model_[kk][0](0);//第0个表情第kk个landmark的x坐标
 			float mean_py_3d = this->bsData_.landmarks_model_[kk][0](1);
 			float mean_pz_3d = this->bsData_.landmarks_model_[kk][0](2);
 			mean_pt_3d[0] = mean_px_3d;
@@ -800,6 +800,9 @@ void SingleImageReconstructor::PrepareConstraints()
 				basis_shape.emplace_back(cv::Vec3f(x_, y_, z_));//emplace_back类似于push_back
 			}
 			this->constraints2D_[kk].basis_shape = basis_shape;
+			//constraints2D_是一个vector<Constraint2D>，Constraint2D是Constraint<cv::Vec2f>;Constraint是一个struct，里面有vector<cv::Vec3f> basis_shape;
+			//basis_shape是vector<cv::Vec3f>;
+
 			this->constraints2D_[kk].mean_pt = mean_pt_3d;
 			this->constraints2D_[kk].vidx = idx_3d;
 			// Setup weight
@@ -999,7 +1002,7 @@ double SingleImageReconstructor::ComputeError()
 
 
 /* Load 3D Landmarks' Index */
-void SingleImageReconstructor::LoadIndex3D(std::string filename) 
+void SingleImageReconstructor::LoadIndex3D(std::string filename) //从data/jisy-20161215/68markers.txt加载
 {
 	index3D_.resize(numPts_);
 	std::ifstream in(filename);
@@ -1043,8 +1046,10 @@ void SingleImageReconstructor::UpdatePts3D()
 	for (int ii = 0; ii < this->index3D_.size(); ii++) 
 	{
 		this->pts3D_[ii].setZero();
+		//自然表情
 		this->pts3D_[ii] = this->pts3D_[ii] + this->bsData_.landmarks_model_[ii][0] * recon_model_.params_[0];
-		for (int kk = 1; kk < NUM_BLENDSHAPE + 1; kk++) 
+		//特定表情  一个新的表情F（x）=b0+△Bx,△B=[b1-b0,...,bn-b0],x=[x1,...xn]^T是blendshape的权重
+		for (int kk = 1; kk < NUM_BLENDSHAPE + 1; kk++) //[ii][kk]第kk个模型表情第ii个landmark
 		{
 			this->pts3D_[ii] = this->pts3D_[ii] +
 				(bsData_.landmarks_model_[ii][kk] - bsData_.landmarks_model_[ii][0]) * recon_model_.params_[kk];
@@ -1054,11 +1059,12 @@ void SingleImageReconstructor::UpdatePts3D()
 }
 
 /* Update Landmark Position */
-void SingleImageReconstructor::UpdateLandmarkPos() {
-
+void SingleImageReconstructor::UpdateLandmarkPos() 
+{
 	landmark3DPos_ = Eigen::MatrixXf(numPts_, 3);
-	for (int kk = 0; kk < numPts_; kk++) {
-		landmark3DPos_(kk, 0) = recon_mesh_.position_(index3D_[kk], 0);
+	for (int kk = 0; kk < numPts_; kk++) 
+	{
+		landmark3DPos_(kk, 0) = recon_mesh_.position_(index3D_[kk], 0);// 从data / jisy - 20161215 / 68markers.txt加载index3D_
 		landmark3DPos_(kk, 1) = recon_mesh_.position_(index3D_[kk], 1);
 		landmark3DPos_(kk, 2) = recon_mesh_.position_(index3D_[kk], 2);
 		//landmark3DPos_(kk, 0) = cur_landmark_[kk](0);
@@ -1066,11 +1072,10 @@ void SingleImageReconstructor::UpdateLandmarkPos() {
 		//landmark3DPos_(kk, 2) = cur_landmark_[kk](2);
 	}
 	return;
-
 }
 
-void SingleImageReconstructor::UpdateModelMat() {
-
+void SingleImageReconstructor::UpdateModelMat() 
+{
 	float Rx = (float)recon_model_.Rx_;
 	float Ry = (float)recon_model_.Ry_;
 	float Rz = (float)recon_model_.Rz_;
@@ -1081,7 +1086,9 @@ void SingleImageReconstructor::UpdateModelMat() {
 	auto Tmat = glm::translate(glm::fmat4(1.0), glm::fvec3(Tx, Ty, Tz));
 	model_mat_ = Tmat * Rmat;
 }
-void SingleImageReconstructor::UpdateProjectionMat() {
+
+void SingleImageReconstructor::UpdateProjectionMat() 
+{
 	float aspect = (float)recon_camera_.aspect_;
 	float focal = (float)recon_camera_.focal_;
 	float far_c = (float)recon_camera_.far_c_;
@@ -1089,8 +1096,8 @@ void SingleImageReconstructor::UpdateProjectionMat() {
 	//projection_ = glm::perspective(45.0f, (float)recon_camera_.imgSize_[0] / (float)recon_camera_.imgSize_[1], focal, far_c);
 }
 
-void SingleImageReconstructor::UpdateMesh(std::vector<double> coef) {
-
-	this->bsData_.UpdateMesh(coef, this->recon_mesh_);
+void SingleImageReconstructor::UpdateMesh(std::vector<double> coef) 
+{
+	this->bsData_.UpdateMesh(coef, this->recon_mesh_);//coef即params_
 	return;
 }
