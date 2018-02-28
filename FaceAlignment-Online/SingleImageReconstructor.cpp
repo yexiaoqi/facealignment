@@ -799,12 +799,12 @@ void SingleImageReconstructor::PrepareConstraints()
 				float z_ = this->bsData_.landmarks_model_[kk][a](2);
 				basis_shape.emplace_back(cv::Vec3f(x_, y_, z_));//emplace_back类似于push_back
 			}
-			this->constraints2D_[kk].basis_shape = basis_shape;
+			this->constraints2D_[kk].basis_shape = basis_shape;//51的特定表情位置
 			//constraints2D_是一个vector<Constraint2D>，Constraint2D是Constraint<cv::Vec2f>;Constraint是一个struct，里面有vector<cv::Vec3f> basis_shape;
 			//basis_shape是vector<cv::Vec3f>;
 
-			this->constraints2D_[kk].mean_pt = mean_pt_3d;
-			this->constraints2D_[kk].vidx = idx_3d;
+			this->constraints2D_[kk].mean_pt = mean_pt_3d;//自然表情位置
+			this->constraints2D_[kk].vidx = idx_3d;//landmark索引号
 			// Setup weight
 			//if (kk >= 10 && kk <= 17) this->constraints2D_[kk].weight = 20.0;  // left eye   //jisy fix
 			//else if (kk >= 18 && kk <= 25) this->constraints2D_[kk].weight = 20.0; // right eye

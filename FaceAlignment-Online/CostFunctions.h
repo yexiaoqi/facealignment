@@ -265,13 +265,14 @@ struct ShapeEstimateByLandmarkResidual_AutoDiff
 	template<typename T>
 	bool operator()(const T* const X, T* residual)const
 	{
-		// 3D point as input
+		// 3D point as input 自然表情作为输入
 		T ox = T(mean_shape_[0]);
 		T oy = T(mean_shape_[1]);
 		T oz = T(mean_shape_[2]);
 		T ow = T(1.0);
 		for (int i = 0; i < NUM_BLENDSHAPE; i++)
 		{
+			//一个新的表情F（x）=b0+△Bx,△B=[b1-b0,...,bn-b0],x=[x1,...xn]^T是blendshape的权重
 			ox += X[i] * T(basis_shape_[i][0] - mean_shape_[0]);
 			oy += X[i] * T(basis_shape_[i][1] - mean_shape_[1]);
 			oz += X[i] * T(basis_shape_[i][2] - mean_shape_[2]);

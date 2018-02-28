@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
 	mImgRecon.numPts_ = m_numLandmark;//numPts_为68
 	mImgRecon.LoadIndex3D(m_indexFile);//加载index3d得到index3D_ //从data/jisy-20161215/68markers.txt加载
 	// project landmark
-	mImgRecon.bsData_.ProjectLandmark(mImgRecon.index3D_);//通过index3D_将位置三维信息传给landmarks_model_
+	mImgRecon.bsData_.ProjectLandmark(mImgRecon.index3D_);//通过index3D_将位置三维信息传给landmarks_model_,在PrepareConstraints和UpdatePts3D()会用到
 	// open the video file
 
 	if (!m_videoInput.empty())//if m_videoInput非空：调用opencv里的open输入视频和get帧数
@@ -335,6 +335,8 @@ int main(int argc, char *argv[])
 	mImgRecon.SetInputImage(mFrame);//设置行列
 	mImgRecon.Init();//初始化模型的位置
 	mImgRecon.PrepareConstraints();//把模型的位置传给constraints2D_，设置每个landmark的权重
+	//constraints2D_被用于ShapeEstimateByLandmarkResidual_AutoDiff，这里有3d往2d的投影（模型投影到屏幕，为了和输入人脸匹配），通过重投影误差进行优化
+
 	mImgRecon.LandmarkDetect(mImgRecon.input_img_);	//调用dlib进行landmark检测并传给pts2D_
 	mFrame.copyTo(imageDisp);
 	if (isDraw2DLandmark) drawLandmark(imageDisp, mImgRecon.pts2D_, imgWidth, imgHeight);//if (isDraw2DLandmark) 显示landmark
@@ -643,32 +645,40 @@ void RenderCallback()
 	/*****************************************************************************************
 							Step-3 Draw content on opengl window
 	*******************************************************************************************/
+	/*glBindFramebuffer(GLenum target, GLuint framebuffer);
+	target = GL_FRAMEBUFFER指定写入用途FBO和读取用途FBO*/
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//std::cout << winWidth << " x " << winHeight << std::endl;
-	glViewport(0, 0, winWidth, winHeight);
-	glEnable(GL_DEPTH_TEST);
+	glViewport(0, 0, winWidth, winHeight);//glViewport(左下角x坐标, 左下角y坐标, wigth, height); ，默认是（0，0，窗口的宽度，窗口的高度）
+	glEnable(GL_DEPTH_TEST);//启用深度测试
 	glDepthFunc(GL_LESS);
 	glClearDepth(1);
 	glClearColor(0.296875, 0.296875, 0.3203125, 1.0);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//如果需要操作投影矩阵，需要以GL_PROJECTION为参数调用glMatrixMode函数。
 	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
+	glPushMatrix();//glPushMatrix()的作用是把矩阵压入栈中保存起来
 	{
-		glLoadIdentity();
+		glLoadIdentity();//我们需要在进行变换前把当前矩阵设置为单位矩阵。
+		//gluOrtho2D(-5.0, 5.0, -5.0, 5.0); 参数分别代表（左下角x坐标，右上角x坐标，左下角y坐标，右上角y坐标）——坐标全相对于窗口左下角－－原点），near和far默认为 - 1和1，此函数决定一个平行六面体，即View Volume！
 		glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+		/*由于模型和视图的变换都通过矩阵运算来实现，在进行变换前，应先设置当前操作的矩阵为“模型视图矩阵”。设置的方法是以GL_MODELVIEW为参数调用glMatrixMode函数，像这样：
+			glMatrixMode(GL_MODELVIEW);*/
 		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
+		glPushMatrix();//把矩阵压入栈中保存起来
 		{
 			// Left window
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, textureIds);
+			glEnable(GL_TEXTURE_2D);//启用2D纹理
+			glBindTexture(GL_TEXTURE_2D, textureIds);//绑定纹理
+//glteximage2d（目标纹理，细节级别，颜色组件，纹理图像宽，高，边框宽度，像素颜色格式，像素数据类型，图像数据指针）
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mGLRender.win_size_[0], mGLRender.win_size_[1],
 				0, GL_RGBA, GL_UNSIGNED_BYTE, imageDisp.data);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glBegin(GL_QUADS); {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);//纹理放大过滤
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//纹理缩小过滤
+			glBegin(GL_QUADS); //绘制一组四边形
+			{
 				glTexCoord2f(0, 1);  glVertex2f(0, 0);
 				glTexCoord2f(1, 1);  glVertex2f(0.5, 0);
 				glTexCoord2f(1, 0);  glVertex2f(0.5, 1);
@@ -683,7 +693,8 @@ void RenderCallback()
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glBegin(GL_QUADS); {
+			glBegin(GL_QUADS); 
+			{
 				glTexCoord2f(0, 1);  glVertex2f(0.5, 0);
 				glTexCoord2f(1, 1);  glVertex2f(1, 0);
 				glTexCoord2f(1, 0);  glVertex2f(1, 1);
@@ -694,8 +705,8 @@ void RenderCallback()
 		}
 		glDisable(GL_TEXTURE_2D);
 	}
-	glPopMatrix();
-	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();//弹出矩阵
+	glMatrixMode(GL_PROJECTION);//投影矩阵
 	glPopMatrix();
 	glutSwapBuffers();
 	glutPostRedisplay();
