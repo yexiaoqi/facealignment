@@ -1,0 +1,25 @@
+Incompatible BrowsD_L BrowsU_L
+Incompatible BrowsD_R BrowsU_R
+Incompatible JawLeft JawRight
+Incompatible MouthLeft MouthRight
+Constrained LipsTogether JawOpen
+Mergeable BrowsD BrowsD_L BrowsD_R
+Mergeable BrowsSqueeze BrowsSqueeze_L BrowsSqueeze_R
+Mergeable BrowsU BrowsU_L BrowsU_R
+Mergeable BrowsU_C BrowsU_C_L BrowsU_C_R
+Mergeable CheekSquint CheekSquint_L CheekSquint_R
+Mergeable ChinRaise ChinLowerRaise ChinUpperRaise
+Mergeable LipsFunnel LipsFunnel_L LipsFunnel_R
+Mergeable LipsLowerDown LipsLowerDown_L LipsLowerDown_R
+Mergeable LipsPucker LipsPucker_L LipsPucker_R
+Mergeable LipsStretch LipsStretch_L LipsStretch_R
+Mergeable LipsTowards LipsTowards_L LipsTowards_R
+Mergeable LipsUpperUp LipsUpperUp_L LipsUpperUp_R
+Mergeable MouthDimple MouthDimple_L MouthDimple_R
+Mergeable MouthFrown MouthFrown_L MouthFrown_R
+Mergeable MouthPress MouthPress_L MouthPress_R
+Mergeable MouthSharpCornerPull MouthSharpCornerPull_L MouthSharpCornerPull_R
+Mergeable MouthSmile MouthSmile_L MouthSmile_R
+Mergeable NostrilDepress NostrilDepress_L NostrilDepress_R
+Mergeable Puff Puff_L Puff_R
+Mergeable Sneer Sneer_L Sneer_R
