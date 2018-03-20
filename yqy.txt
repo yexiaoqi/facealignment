@@ -1,0 +1,1 @@
+model_yqy_20180309_tri是用3dsmax female模型得到的mesh，可运行，效果较差

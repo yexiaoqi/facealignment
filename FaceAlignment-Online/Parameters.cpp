@@ -34,8 +34,8 @@ void ModelParametersBs::Init(int nBs)
 	this->params_[0] = 1.0;
 	Rx_ = Ry_ = Rz_ = 0.0;
 	Tx_ = 0.2;
-	Ty_ = 0.0;
-	Tz_ = -3000.0;
+	Ty_ = -20.0;
+	Tz_ = -400.0;
 	//Tz_ = -1000.0;yqy测试，这些参数就是确定模型的初始位置
 	//Tz_ = -20.0;//use luming.model
 	

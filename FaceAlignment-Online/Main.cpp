@@ -262,6 +262,7 @@ int main(int argc, char *argv[])
 
 	if (!m_videoInput.empty())//if m_videoInput非空：调用opencv里的open输入视频和get帧数
 	{
+		//cout << cv::getBuildInformation() << endl;
 		mCap.open(m_videoInput);
 		nFrame = mCap.get(CV_CAP_PROP_FRAME_COUNT);
 	}
@@ -335,7 +336,7 @@ int main(int argc, char *argv[])
 	mImgRecon.SetInputImage(mFrame);//设置行列
 	mImgRecon.Init();//初始化模型的位置
 	mImgRecon.PrepareConstraints();//把模型的位置传给constraints2D_，设置每个landmark的权重
-	//constraints2D_被用于ShapeEstimateByLandmarkResidual_AutoDiff，这里有3d往2d的投影（模型投影到屏幕，为了和输入人脸匹配），通过重投影误差进行优化
+	//constraints2D_被用于ShapeEstimateByLandmarkResidual_AutoDiff，这里有3d往2d的投影（模型投影到屏幕，为了优化和输入人脸匹配），通过重投影误差进行优化
 
 	mImgRecon.LandmarkDetect(mImgRecon.input_img_);	//调用dlib进行landmark检测并传给pts2D_
 	mFrame.copyTo(imageDisp);
@@ -346,12 +347,15 @@ int main(int argc, char *argv[])
 	// Prepare Display Content for OpenGL Render ( Background & Mesh Model & Spheres )
 	mGLRender.Init(Eigen::Vector2i(imgWidth, imgHeight)); // render size = image size
 	// A. prepare bg ground image
+	//若去掉part a，则左半部分显示绿色背景，没有输入视频，但模型还能动
 	mGLRender.addModel(BufModel(), 0);//增加模型，0是modelIdx
 	mGLRender.models[0].CreateBGplaneModel();//创建背景
-	mGLRender.models[0].LoadShaderProgram("shaders/background_vertex_shader.glsl", "shaders/background_fragment_shader.glsl");//加载着色器
-	mGLRender.models[0].BufCreateTexture(imgWidth, imgHeight);
-	mGLRender.models[0].BufUpdateTexture(imageDisp);//创建与更新纹理
+	mGLRender.models[0].LoadShaderProgram("shaders/background_vertex_shader.glsl", "shaders/background_fragment_shader.glsl");//加载着色器//若没有这句，则左半部分显示蓝色背景，没有输入视频，但模型还能动
+	mGLRender.models[0].BufCreateTexture(imgWidth, imgHeight);//若没有这句，则左半部分显示黑色背景，没有输入视频，但模型还能动
+	mGLRender.models[0].BufUpdateTexture(imageDisp);//创建与更新纹理 若没有这句，则按下“a”之前左半边为黑色，按下“a”后一切照旧
 	mGLRender.models[0].isDraw_ = true;
+
+
 	//   准备模型  B. prepare model
 	mGLRender.addModel(BufModel(), 1);//  增加模型
 	mGLRender.models[1].CreateDispModel(mImgRecon.recon_mesh_, false);//    创建dispmodel
@@ -371,7 +375,7 @@ int main(int argc, char *argv[])
 	mImgRecon.UpdateLandmarkPos();	// 更新landmark位置update in single image reconstructor
 	mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_); // 设置3dlandmark数据set data
 	mGLRender.spheres[0].SetColor(1.f, 0.f, 0.f);
-	mGLRender.spheres[0].SetScale(0.01f);//设置颜色和大小
+	mGLRender.spheres[0].SetScale(0.9f);//设置颜色和大小,原来是0.01f，太细，现在可以在模型上显示特征点
 	mGLRender.spheres[0].exception_idx_ = -1;
 	mGLRender.spheres[0].drawSphere_ = false;
 	//   设置缓冲器模型、视角和投影矩阵  6 - Set Buffer Model's Model && View && Projection Matrix
@@ -713,14 +717,20 @@ void RenderCallback()
 	//////////////////////////////////////////////////////////////////////////////////
 }
 
-
-void drawLandmark(cv::Mat& disp, std::vector<cv::Point2d> pts, int width, int height) 
-{
-	for (int kk = 0; kk < pts.size(); kk++) 
-	{
+void drawLandmark(cv::Mat& disp, std::vector<cv::Point2d> pts, int width, int height) {
+	for (int kk = 0; kk < pts.size(); kk++) {
 		cv::circle(imageDisp, cv::Point((int)pts.at(kk).x, (int)pts.at(kk).y), 4, cv::Scalar(0, 255, 0), -1);//JISY : (height - y) -> y
+		putText(imageDisp, to_string(kk), cv::Point((int)pts.at(kk).x, (int)pts.at(kk).y), CV_FONT_HERSHEY_PLAIN, 1, cv::Scalar(255, 0, 0), 1, 4);//yqy显示landmark编号
+		cout << cv::Point((int)pts.at(kk).x, (int)pts.at(kk).y) << endl;//yqy输出landmark在图上的像素坐标
 	}
 }
+//void drawLandmark(cv::Mat& disp, std::vector<cv::Point2d> pts, int width, int height) 
+//{
+//	for (int kk = 0; kk < pts.size(); kk++) 
+//	{
+//		cv::circle(imageDisp, cv::Point((int)pts.at(kk).x, (int)pts.at(kk).y), 4, cv::Scalar(0, 255, 0), -1);//JISY : (height - y) -> y
+//	}
+//}
 
 // [Deprecated]
 void loadVideoPts2D(std::string pts2d_file)
