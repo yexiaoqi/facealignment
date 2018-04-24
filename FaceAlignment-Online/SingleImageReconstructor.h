@@ -47,8 +47,8 @@ public:
 	Eigen::Vector2d ProjectPoint(Eigen::Vector3d pt3d);
 	double ComputeError();
 	void LoadIndex3D(std::string filename);
-	void UpdatePts2D(std::string landmark_file);
-	void UpdatePts2D(std::vector<cv::Point2d> pts2D);
+	/*void UpdatePts2D(std::string landmark_file);
+	void UpdatePts2D(std::vector<cv::Point2d> pts2D);*/
 	void UpdatePts3D();
 	void UpdateLandmarkPos();
 	void UpdateModelMat();

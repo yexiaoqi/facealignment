@@ -7,11 +7,13 @@ void Blendshape::LoadBs(std::string bs_folder, int nBs)
 {
 	nBs_ = nBs;
 	Mesh obj_mesh;
+	BufModel obj_bufmodel;
 	std::string bs_file;
 	char filename[512];
 	//1. load neutral first
 	sprintf_s(filename, "%s/neutral.obj", bs_folder.c_str());
-	obj_mesh.load_obj(filename);
+	obj_bufmodel.load_obj(filename);//add yqy180424
+	//obj_mesh.load_obj(filename);//comment yqy180424
 	//obj_mesh.center_model();//jisy center model 170109
 	//obj_mesh.normalize_model();
 	obj_mesh.update_normal();
@@ -22,7 +24,8 @@ void Blendshape::LoadBs(std::string bs_folder, int nBs)
 		sprintf_s(filename, "mesh_%d.obj", kk);
 		bs_file = bs_folder + "/" + std::string(filename);
 		//std::cout << "Loading blendshape " << bs_file << std::endl;
-		obj_mesh.load_obj(bs_file);
+		obj_bufmodel.load_obj(bs_file);//add yqy180424
+		//obj_mesh.load_obj(bs_file);//comment yqy180424
 		//obj_mesh.center_model();//jisy center model 170109
 		obj_mesh.update_normal();
 		blendshapes_.push_back(obj_mesh);

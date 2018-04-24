@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>E:\anzhuangbao\opencv\opencv\build\include;E:\anzhuangbao\python\python2\include;D:\libraries\glm-0.9.8.3\glm;D:\libraries\dlib-19.2\dlib-19.2-bin\include;D:\libraries\gflags-master\gflags\include;D:\libraries\glog-master\glog\include;D:\libraries\freeglut3.0.0\include;D:\libraries\ceres-solver-1.11.0\ceres-withSuiteSparse-blog\include;D:\libraries\glew-2.0.0-win32\glew-2.0.0\include;D:\libraries\eigen3.2.10;E:\anzhuangbao\vs2015\VC\include;E:\anzhuangbao\vs2015\VC\atlmfc\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt;C:\Program Files (x86)\Windows Kits\8.1\Include\um;C:\Program Files (x86)\Windows Kits\8.1\Include\shared;C:\Program Files (x86)\Windows Kits\8.1\Include\winrt</IncludePath>
-    <LibraryPath>E:\anzhuangbao\opencv\opencv\build\x64\vc12\lib;E:\anzhuangbao\python\python2\libs;D:\libraries\dlib-19.2\dlib-19.2-bin\lib\x64-vs2015\release;D:\libraries\gflags-master\gflags\lib\x64\Release;D:\libraries\ceres-solver-1.11.0\ceres-withSuiteSparse-blog\lib\x64-vs2015\Release;D:\libraries\glog-master\glog\lib\x64\release;D:\libraries\freeglut3.0.0\lib\x64;D:\libraries\glew-2.0.0-win32\glew-2.0.0\lib\Release\x64;E:\anzhuangbao\vs2015\VC\lib\amd64;E:\anzhuangbao\vs2015\VC\atlmfc\lib\amd64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.10240.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\Lib\um\x64</LibraryPath>
+    <IncludePath>E:\anzhuangbao\opencv\opencv\build\include;E:\anzhuangbao\python\python2\include;D:\libraries\glm-0.9.8.3\glm;D:\libraries\dlib-19.2\dlib-19.2-bin\include;D:\libraries\gflags-master\gflags\include;D:\libraries\glog-master\glog\include;D:\libraries\freeglut3.0.0\include;D:\libraries\ceres-solver-1.11.0\ceres-withSuiteSparse-blog\include;D:\libraries\glew-2.0.0-win32\glew-2.0.0\include;D:\libraries\eigen3.2.10;E:\anzhuangbao\vs2015\VC\include;E:\anzhuangbao\vs2015\VC\atlmfc\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt;C:\Program Files (x86)\Windows Kits\8.1\Include\um;C:\Program Files (x86)\Windows Kits\8.1\Include\shared;C:\Program Files (x86)\Windows Kits\8.1\Include\winrt;D:\libraries\assimp-3.3.1\assimp-3.3.1-bin\include;D:\libraries\soil\Simple OpenGL Image Library\src</IncludePath>
+    <LibraryPath>E:\anzhuangbao\opencv\opencv\build\x64\vc12\lib;E:\anzhuangbao\python\python2\libs;D:\libraries\dlib-19.2\dlib-19.2-bin\lib\x64-vs2015\release;D:\libraries\gflags-master\gflags\lib\x64\Release;D:\libraries\ceres-solver-1.11.0\ceres-withSuiteSparse-blog\lib\x64-vs2015\Release;D:\libraries\glog-master\glog\lib\x64\release;D:\libraries\freeglut3.0.0\lib\x64;D:\libraries\glew-2.0.0-win32\glew-2.0.0\lib\Release\x64;E:\anzhuangbao\vs2015\VC\lib\amd64;E:\anzhuangbao\vs2015\VC\atlmfc\lib\amd64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.10240.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\Lib\um\x64;D:\libraries\soil\Simple OpenGL Image Library\lib\vc15\x64\Release;D:\libraries\assimp-3.3.1\assimp-3.3.1-bin\vs2013\x64\Release</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -113,7 +113,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_objdetect2411.lib;opencv_ts2411.lib;opencv_video2411.lib;opencv_nonfree2411.lib;opencv_ocl2411.lib;opencv_photo2411.lib;opencv_stitching2411.lib;opencv_superres2411.lib;opencv_videostab2411.lib;opencv_calib3d2411.lib;opencv_contrib2411.lib;opencv_core2411.lib;opencv_features2d2411.lib;opencv_flann2411.lib;opencv_gpu2411.lib;opencv_highgui2411.lib;opencv_imgproc2411.lib;opencv_legacy2411.lib;opencv_ml2411.lib;dlib.lib;freeglut.lib;opengl32.lib;glew32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc120-mt.lib;SOIL.lib;opencv_objdetect2411.lib;opencv_ts2411.lib;opencv_video2411.lib;opencv_nonfree2411.lib;opencv_ocl2411.lib;opencv_photo2411.lib;opencv_stitching2411.lib;opencv_superres2411.lib;opencv_videostab2411.lib;opencv_calib3d2411.lib;opencv_contrib2411.lib;opencv_core2411.lib;opencv_features2d2411.lib;opencv_flann2411.lib;opencv_gpu2411.lib;opencv_highgui2411.lib;opencv_imgproc2411.lib;opencv_legacy2411.lib;opencv_ml2411.lib;dlib.lib;freeglut.lib;opengl32.lib;glew32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -125,7 +125,9 @@
     <ClInclude Include="Models.h" />
     <ClInclude Include="ObjMesh.h" />
     <ClInclude Include="Parameters.h" />
+    <ClInclude Include="shader.h" />
     <ClInclude Include="SingleImageReconstructor.h" />
+    <ClInclude Include="texture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ArgParser.cpp" />

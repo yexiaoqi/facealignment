@@ -1,11 +1,79 @@
 #include "ObjMesh.h"
 
 #include <omp.h>
+#include <map>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #include <iostream>
 #include <fstream>
 
-void ObjMesh::load_obj(std::string filename) 
+
+
+
+
+
+
+void Mesh::update_normal()
 {
+	
+	this->normal_.resize(n_verts_, 3);
+	this->face_normal_.resize(n_tri_, 3);
+	this->normal_.setZero();
+	this->face_normal_.setZero();
+	std::vector<float> area_sum(this->n_verts_, 0.f);
+	omp_lock_t writelock;
+	omp_init_lock(&writelock);
+
+#pragma omp parallel for
+	//原理请看【一步步学OpenGL 18】 -《漫射光》 - Mr_厚厚的博客 - CSDN博客中CalcNormals函数部分
+	for (int i = 0; i<n_tri_; ++i) {
+		auto vidx0 = tri_list_(i, 0);
+		auto vidx1 = tri_list_(i, 1);
+		auto vidx2 = tri_list_(i, 2);
+
+		auto v0 = Eigen::Vector3f(position_.row(vidx0));
+		auto v1 = Eigen::Vector3f(position_.row(vidx1));
+		auto v2 = Eigen::Vector3f(position_.row(vidx2));
+
+		auto v0v1 = v1 - v0;
+		auto v0v2 = v2 - v0;
+		auto n = v0v2.cross(v0v1);
+		double area = n.norm();
+		//对于每个三角形法向量都是通过计算从第一个顶点出发到其他两个顶点的两条边向量的差积得到的。在向量累加之前要求先将其单位化，因为差积运算后的
+		//结果不一定是单位向量。
+		omp_set_lock(&writelock);
+		//累加计算三角形每个顶点的法向量
+		this->normal_.row(vidx0) += n;
+		this->normal_.row(vidx1) += n;
+		this->normal_.row(vidx2) += n;
+		area_sum[vidx0] += area;
+		area_sum[vidx1] += area;
+		area_sum[vidx2] += area;
+		omp_unset_lock(&writelock);
+		n.normalize();
+		this->face_normal_.row(i) = n;//面法线
+	}
+	omp_destroy_lock(&writelock);
+
+#pragma omp parallel for
+	for (int i = 0; i<n_verts_; ++i)
+	{
+		this->normal_.row(i) /= area_sum[i];
+	}
+
+}
+
+
+
+
+
+
+#if 0
+//comment yqy180424
+void ObjMesh::load_obj(std::string filename)
+{
+	
 	// prepare all the prefixs
 	std::vector<double> coords;
 	std::vector<int> tris;
@@ -139,7 +207,11 @@ void ObjMesh::load_obj(std::string filename)
 	}
 
 	return;
+	
 }
+
+
+
 
 void ObjMesh::write_obj(std::string filename) 
 {	
@@ -351,3 +423,5 @@ void ObjMesh::update_vertices(const Eigen::VectorXd &vertices) {
 }
 
 
+//comment end yqy180424
+#endif

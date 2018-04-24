@@ -1,13 +1,15 @@
 #pragma once
 
 #include "ObjMesh.h"
-
+#include "texture.h"
 #include <vector>
 #include <map>
 #include <string>
 #include <fstream>
 #include <iostream>
-
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #include <GL/glew.h>
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
@@ -119,10 +121,13 @@ public:
 	BufModel();
 	~BufModel();
 
+#if 1
+	//commnet yqy180424
 	void CreateBGplaneModel();
-	void CreateDispModel(Mesh& model, bool isStatic);
+	void CreateDispModel(Mesh& model, bool isStatic);//commnet yqy180424
 	void UpdateDispModel(Mesh& model);
-
+	//commnet end yqy180424
+#endif
 	/* shader */
 	void LoadShaderProgram(const char* vertexShaderFilename, const char* fragmentShaderFilename) 
 	{
@@ -132,6 +137,17 @@ public:
 	void LoadTextureFile(const std::string& filename, unsigned int width, unsigned int height) { this->tex_ = LoadTexture(filename, width, height);}
 	void BufCreateTexture(unsigned int width, unsigned int height){ this->tex_ = CreateTexture(width, height); }
 	void BufUpdateTexture(cv::Mat& image){ UpdateTexture(this->tex_, image); }
+
+
+	//add yqy180424
+	void draw(const Shader& shader) const;
+	bool load_obj(std::string filePath);
+	bool processNode(const aiNode* node, const aiScene* sceneObjPtr);
+	bool processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr, Mesh& meshObj);
+	bool processMaterial(const aiMaterial* matPtr, const aiScene* sceneObjPtr,
+		const aiTextureType textureType, std::vector<Texture>& textures);
+	//add end yqy180424
+
 
 
 	/* render function */
@@ -164,6 +180,15 @@ public:
 	bool isBg_;
 	bool isDraw_;
 	int colorMode_;
+
+
+	//add yqy180424
+	std::vector<Mesh> meshes; // 保存Mesh
+	std::string modelFileDir; // 保存模型文件的文件夹路径
+	typedef std::map<std::string, Texture> LoadedTextMapType; // key = texture file path
+	LoadedTextMapType loadedTextureMap; // 保存已经加载的纹理
+	//add end yqy180424
+
 };
 
 /* solid sphere - buffer model */
@@ -178,7 +203,8 @@ public:
 	{
 		//jisy edit 
 		template_sphere_.request_tex_coord_ = false;
-		template_sphere_.load_obj("data/sphere.obj"); this->CreateDispModel(template_sphere_, false); this->nTri_ = template_sphere_.n_tri_;
+		//template_sphere_.load_obj("data/sphere.obj"); //comment yqy180424
+		this->CreateDispModel(template_sphere_, false); this->nTri_ = template_sphere_.n_tri_;
 		this->nPoint_ = 0;
 		this->drawSphere_ = false;
 		this->scale_ = 1.0;

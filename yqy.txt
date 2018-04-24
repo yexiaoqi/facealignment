@@ -1,1 +1,4 @@
-model_yqy_20180309_tri是用3dsmax female模型得到的mesh，可运行，效果较差
+180320修改：
+model_yqy_20180309_tri是用3dsmax female模型得到的mesh，
+yqymanmarkers180320是在meshlab里在模型上找的landmark位置的顶点索引号
+这样此版本就将模型替换成其他动画模型了

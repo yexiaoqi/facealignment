@@ -10,7 +10,7 @@
 #include <Eigen\Eigen>
 
 #include "ObjMesh.h"
-
+#include"BufModel.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Blendshape class */
 class Blendshape 
@@ -24,4 +24,5 @@ public:
 	int nBs_;
 	std::vector<std::vector<Eigen::Vector3d>> landmarks_model_;
 	std::vector<Mesh> blendshapes_;
+	std::vector<BufModel> bufmodels_;//add yqy180424
 };

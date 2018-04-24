@@ -3,8 +3,8 @@
 
 #include <Windows.h>
 
-const char* str_facemdlpath = "data/model/haarcascade_frontalface_301911.xml";
-const char* str_fshpmdlpath = "data/model/ilc_78pnts_basic.bmd";
+//const char* str_facemdlpath = "data/model/haarcascade_frontalface_301911.xml";
+//const char* str_fshpmdlpath = "data/model/ilc_78pnts_basic.bmd";
 const char* str_dlibModelPath = "shape_predictor_68_face_landmarks.dat";
 
 // todo : fix bug of faceshape detector
@@ -1016,29 +1016,29 @@ void SingleImageReconstructor::LoadIndex3D(std::string filename) //´Ódata/jisy-2
 	in.close();
 }
 
-/* Update 2D Landmarks [remove last two landmarks]*/
-void SingleImageReconstructor::UpdatePts2D(std::string landmark_file) 
-{
-	this->pts2D_.resize(numPts_);
-	std::ifstream in(landmark_file);
-	if (in.is_open()) 
-	{
-		for (int kk = 0; kk < numPts_; kk++) 
-		{
-			in >> this->pts2D_[kk].x >> this->pts2D_[kk].y;
-			/*this->pts2D_[kk].x = this->pts2D_[kk].x;
-			this->pts2D_[kk].y = this->pts2D_[kk].y;*/
-			this->pts2D_[kk].y = imgHeight_ - this->pts2D_[kk].y;
-		}
-		in.close();
-	}
-}
-
-/* Update 2D Landmarks from Outside */
-void SingleImageReconstructor::UpdatePts2D(std::vector<cv::Point2d> pts2D) 
-{
-	this->pts2D_ = pts2D;
-}
+///* Update 2D Landmarks [remove last two landmarks]*/
+//void SingleImageReconstructor::UpdatePts2D(std::string landmark_file) 
+//{
+//	this->pts2D_.resize(numPts_);
+//	std::ifstream in(landmark_file);
+//	if (in.is_open()) 
+//	{
+//		for (int kk = 0; kk < numPts_; kk++) 
+//		{
+//			in >> this->pts2D_[kk].x >> this->pts2D_[kk].y;
+//			/*this->pts2D_[kk].x = this->pts2D_[kk].x;
+//			this->pts2D_[kk].y = this->pts2D_[kk].y;*/
+//			this->pts2D_[kk].y = imgHeight_ - this->pts2D_[kk].y;
+//		}
+//		in.close();
+//	}
+//}
+//
+///* Update 2D Landmarks from Outside */
+//void SingleImageReconstructor::UpdatePts2D(std::vector<cv::Point2d> pts2D) 
+//{
+//	this->pts2D_ = pts2D;
+//}
 
 /* Update 3D Landmarks */
 void SingleImageReconstructor::UpdatePts3D() 

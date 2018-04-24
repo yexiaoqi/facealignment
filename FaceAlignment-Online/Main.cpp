@@ -357,8 +357,13 @@ int main(int argc, char *argv[])
 
 
 	//   准备模型  B. prepare model
+	//add yqy180424
+	Shader shader("model.vertex", "model.frag");
+	shader.use();
+	//add end180424
 	mGLRender.addModel(BufModel(), 1);//  增加模型
-	mGLRender.models[1].CreateDispModel(mImgRecon.recon_mesh_, false);//    创建dispmodel
+	mGLRender.models[1].draw(shader);//add yqy180424
+	//mGLRender.models[1].CreateDispModel(mImgRecon.recon_mesh_, false);//    创建dispmodel //comment yqy 180424
 	mGLRender.models[1].LoadShaderProgram("shaders/face_vertex_shader_dir.glsl", "shaders/face_fragment_shader_dir.glsl");//加载着色器
 	mGLRender.models[1].isDraw_ = false;
 	mGLRender.models[1].colorMode_ = 0;
@@ -375,7 +380,7 @@ int main(int argc, char *argv[])
 	mImgRecon.UpdateLandmarkPos();	// 更新landmark位置update in single image reconstructor
 	mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_); // 设置3dlandmark数据set data
 	mGLRender.spheres[0].SetColor(1.f, 0.f, 0.f);
-	mGLRender.spheres[0].SetScale(0.9f);//设置颜色和大小,原来是0.01f，太细，现在可以在模型上显示特征点
+	mGLRender.spheres[0].SetScale(0.01f);//设置颜色和大小,原来是0.01f，太细，现在可以在模型上显示特征点
 	mGLRender.spheres[0].exception_idx_ = -1;
 	mGLRender.spheres[0].drawSphere_ = false;
 	//   设置缓冲器模型、视角和投影矩阵  6 - Set Buffer Model's Model && View && Projection Matrix
