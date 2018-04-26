@@ -252,7 +252,8 @@ int main(int argc, char *argv[])
 		mImgRecon.bsData_.LoadBs(m_bsFolder, m_numBs);//bsFolder =data/model_yqy_20170330_tri 加载51个.obj文件
 	mImgRecon.recon_mesh_ = mImgRecon.bsData_.blendshapes_[0];//neural表情模型作为recon_mesh  
 	//上面一句LoadBs中有blendshapes_.push_back(obj_mesh); blendshapes_就是一个mesh结构
-	mImgRecon.recon_mesh_.update_normal();//recon_mesh更新法线，根据面法线算出点法线
+	mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
+	//mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425//recon_mesh更新法线，根据面法线算出点法线
 	// load index3d
 	mImgRecon.numPts_ = m_numLandmark;//numPts_为68
 	mImgRecon.LoadIndex3D(m_indexFile);//加载index3d得到index3D_ //从data/jisy-20161215/68markers.txt加载
@@ -357,21 +358,30 @@ int main(int argc, char *argv[])
 
 
 	//   准备模型  B. prepare model
-	//add yqy180424
+	
+	mGLRender.addModel(BufModel(), 1);//  增加模型
+	 //add yqy180424
+	mGLRender.models[1].CreateDispModel();//add yqy180426
 	Shader shader("model.vertex", "model.frag");
 	shader.use();
+	mGLRender.models[1].draw(shader);
 	//add end180424
-	mGLRender.addModel(BufModel(), 1);//  增加模型
-	mGLRender.models[1].draw(shader);//add yqy180424
+	//mGLRender.models[1].CreateDispModel(false);//add yqy180425
 	//mGLRender.models[1].CreateDispModel(mImgRecon.recon_mesh_, false);//    创建dispmodel //comment yqy 180424
-	mGLRender.models[1].LoadShaderProgram("shaders/face_vertex_shader_dir.glsl", "shaders/face_fragment_shader_dir.glsl");//加载着色器
+	//mGLRender.models[1].LoadShaderProgram("shaders/face_vertex_shader_dir.glsl", "shaders/face_fragment_shader_dir.glsl");//加载着色器//comment yqy180426
 	mGLRender.models[1].isDraw_ = false;
 	mGLRender.models[1].colorMode_ = 0;
 	if (isResultReview) //if (isResultReview)：更新mesh，法线和dispmodel
 	{		// if result review mode & update model
 		mImgRecon.UpdateMesh(mVideoRes.bsVideo_[frameCnt].params_);
-		mImgRecon.recon_mesh_.update_normal();
-		mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);
+		//comment yqy 180425
+		//mImgRecon.recon_mesh_.update_normal();//更新法线
+		//mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);
+		//comment endyqy 180425
+		//add yqy180425
+		mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线
+		mGLRender.models[1].UpdateDispModel();
+		//add end yqy180425
 	}
 	// 准备参考球  C. prepare spheres
 	mGLRender.addSphere(SolidSphere(), 0);//  增加参考球
@@ -500,7 +510,8 @@ void KeyboardCallback(unsigned char key, int x, int y)
 		meshCnt++;
 		meshCnt = meshCnt % NUM_BLENDSHAPE;
 		mImgRecon.recon_mesh_ = mImgRecon.bsData_.blendshapes_.at(meshCnt);
-		mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);
+		mGLRender.models[1].UpdateDispModel();//add yqy180425
+		//mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);//comment yqy180425
 		mImgRecon.UpdateLandmarkPos();
 		mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_);
 		break;
@@ -544,7 +555,8 @@ void KeyboardCallback(unsigned char key, int x, int y)
 		mVideoRes.bsVideo_.push_back(mImgRecon.recon_model_);
 		// 2 - post display result
 		mImgRecon.UpdateMesh(mImgRecon.recon_model_.params_);
-		mImgRecon.recon_mesh_.update_normal();
+		//mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425
+		mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
 		//mImgRecon.UpdateModelMat();
 		mImgRecon.UpdateProjectionMat();
 		mImgRecon.UpdateLandmarkPos();
@@ -556,7 +568,8 @@ void KeyboardCallback(unsigned char key, int x, int y)
 			mGLRender.spheres[kk].model_ = mImgRecon.model_mat_ *modelMat;
 			mGLRender.spheres[kk].proj_ = mImgRecon.projection_;
 		}
-		mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);
+		mGLRender.models[1].UpdateDispModel();//add yqy180425
+		//mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);//comment yqy180425
 		mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_);
 		break;
 	}
@@ -617,11 +630,13 @@ void RenderCallback()
 		}
 
 		mImgRecon.UpdateMesh(mFrameRes.params_);//  更新mesh
-		mImgRecon.recon_mesh_.update_normal();//更新法线
+		//mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425
+		mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
 		//mImgRecon.UpdateModelMat();//mat translate
 		mImgRecon.UpdateProjectionMat();//更新投影矩阵
 		mImgRecon.UpdateLandmarkPos();//更新landmark位置
-		mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);//更新dispmodel
+		mGLRender.models[1].UpdateDispModel();//add yqy180425
+		//mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);//comment yqy180425//更新dispmodel
 		mGLRender.spheres[0].SetData(mImgRecon.landmark3DPos_);//设置参考球数据
 		frameCnt++;//帧递增
 

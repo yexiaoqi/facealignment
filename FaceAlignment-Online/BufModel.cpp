@@ -161,7 +161,8 @@ void UpdateTexture(unsigned int texId, cv::Mat& image)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
+//comment yqy180425
+#if 0
 /* constructor */
 BufModel::BufModel() 
 {
@@ -176,9 +177,13 @@ BufModel::~BufModel() {
 	glDeleteBuffers(this->vbos_.size(), &this->vbos_[0]);
 	this->vbos_.clear();
 }
+//comment end 180425
+#endif
 
 
-#if 1
+
+
+#if 0
 //commnent yqy180424
 //  创建用于模型显示的GL相关内存
 //CreateDispModel：创建和设置显示模型的VAO, VBO, IBO
@@ -191,13 +196,15 @@ void BufModel::CreateDispModel(Mesh& model, bool isStatic)
 	// gen vertex array
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	std::vector<VertexFormat> vertices;
+	//std::vector<VertexFormat> vertices;//comment yqy180425
+	std::vector<Vertex> vertices;//add yqy180425 
 	std::vector<unsigned int> indices;
 	int nVerts = model.n_verts_;
 	int nTri = model.n_tri_;
 	for (size_t kk = 0; kk < nVerts; kk++) 
 	{
-		vertices.push_back(VertexFormat(glm::vec3(model.position_(kk, 0), // verts
+		vertices.push_back(Vertex(glm::vec3(model.position_(kk, 0), // verts//add yqy180425
+		//vertices.push_back(VertexFormat(glm::vec3(model.position_(kk, 0), // verts//comment yqy180425
 			model.position_(kk, 1),
 			model.position_(kk, 2)),
 			glm::vec4(model.color_(kk, 0) / 255.f,	// colors
@@ -220,10 +227,12 @@ void BufModel::CreateDispModel(Mesh& model, bool isStatic)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo); //顶点属性
 	//若不会去改变这个buffer的内容，用GL_STATIC_DRAW标志
 	if (isStatic)
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VertexFormat),
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),//add yqy180425
+		//glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VertexFormat),//comment yqy180425
 			&vertices[0], GL_STATIC_DRAW);
 	else
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VertexFormat),
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),//add yqy180425
+		//glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VertexFormat),
 			&vertices[0], GL_DYNAMIC_DRAW);
 
 
@@ -234,17 +243,21 @@ void BufModel::CreateDispModel(Mesh& model, bool isStatic)
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-		sizeof(VertexFormat), (void*)0);
+		//sizeof(VertexFormat), (void*)0);
+	   sizeof(Vertex), (void*)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE,
-		sizeof(VertexFormat),
+		sizeof(Vertex),
+		//sizeof(VertexFormat),
 		(void*)12);
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-		sizeof(VertexFormat), (void*)28);
+		sizeof(Vertex), (void*)28);
+		//sizeof(VertexFormat), (void*)28);
 	glEnableVertexAttribArray(3);
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
-		sizeof(VertexFormat),
+		sizeof(Vertex),
+		//sizeof(VertexFormat),
 		(void*)36);
 
 	this->vao_ = vao;
@@ -270,7 +283,16 @@ void BufModel::CreateBGplaneModel()
 
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	std::vector<VertexFormat> vertices;
+	std::vector<Vertex> vertices;
+	vertices.push_back(Vertex(glm::vec3(-1.0, -1.0, 0.99),
+		glm::vec2(0.0, 0.0)));
+	vertices.push_back(Vertex(glm::vec3(1.0, -1.0, 0.99),
+		glm::vec2(1.0, 0.0)));
+	vertices.push_back(Vertex(glm::vec3(1.0, 1.0, 0.99),
+		glm::vec2(1.0, 1.0)));
+	vertices.push_back(Vertex(glm::vec3(-1.0, 1.0, 0.99),
+		glm::vec2(0.0, 1.0)));
+	/*std::vector<VertexFormat> vertices;
 	vertices.push_back(VertexFormat(glm::vec3(-1.0, -1.0, 0.99),
 		glm::vec2(0.0, 0.0)));
 	vertices.push_back(VertexFormat(glm::vec3(1.0, -1.0, 0.99),
@@ -278,11 +300,12 @@ void BufModel::CreateBGplaneModel()
 	vertices.push_back(VertexFormat(glm::vec3(1.0, 1.0, 0.99),
 		glm::vec2(1.0, 1.0)));
 	vertices.push_back(VertexFormat(glm::vec3(-1.0, 1.0, 0.99),
-		glm::vec2(0.0, 1.0)));
+		glm::vec2(0.0, 1.0)));*/
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VertexFormat) * 4, &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4, &vertices[0], GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(VertexFormat) * 4, &vertices[0], GL_STATIC_DRAW);
 
 	GLuint _indices[] = 
 	{  // Note that we start from 0!
@@ -295,9 +318,11 @@ void BufModel::CreateBGplaneModel()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(_indices), _indices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexFormat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexFormat), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexFormat), (void*)28);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)28);
+	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexFormat), (void*)28);
 	glBindVertexArray(0);
 
 	this->vao_ = vao;
@@ -310,7 +335,55 @@ void BufModel::CreateBGplaneModel()
 }
 
 
+//更新模型数据的内存
+//UpdateDispModel：更新模型的VBO
+void BufModel::UpdateDispModel()
+{
+	unsigned int vao;
+	unsigned int vbo, ibo;
+	vao = this->vao_;
+	vbo = this->vbos_[0];
+	std::vector<Vertex> vertices;
+	//std::vector<VertexFormat> vertices;
+	vertices.clear();
+	std::vector<unsigned int> indices;
+	int nVerts = this->n_verts_;
+	int nTri = this->n_tri_;
 
+	for (size_t kk = 0; kk < nVerts; kk++)
+	{
+		vertices.push_back(Vertex(glm::vec3(this->position_(kk, 0), // verts
+																	//vertices.push_back(VertexFormat(glm::vec3(model.position_(kk, 0), // verts
+			this->position_(kk, 1),
+			this->position_(kk, 2)),
+			glm::vec4(this->color_(kk, 0) / 255.f,	// colors
+				this->color_(kk, 1) / 255.f,
+				this->color_(kk, 2) / 255.f, 1.f),
+			glm::vec2(this->tex_coord_(kk, 0), // tex coord
+				this->tex_coord_(kk, 1)),
+			glm::vec3(this->normal_(kk, 0),  // normal
+				this->normal_(kk, 1),
+				this->normal_(kk, 2))));
+	}
+	//std::cout << "Updating vertex buffer array <<<<<<<<<<<<<<<< ----> " << vertices.size() << " vertices" << std::endl;
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	//将一个缓冲区对象中的数据映射为客户端中的地址空间
+	GLfloat* data;
+	// 获取缓冲区的映射指针data
+	data = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+	// 拷贝我们的数据到指针所指向的位置
+	memcpy(data, &vertices[0], vertices.size() * sizeof(Vertex));
+	//memcpy(data, &vertices[0], vertices.size() * sizeof(VertexFormat));
+	// 使用完之后释放映射的指针
+	glUnmapBuffer(GL_ARRAY_BUFFER);
+
+	glBindVertexArray(0);
+	return;
+}
+
+#if 0
+//comment  yqy180424
 //更新模型数据的内存
 //UpdateDispModel：更新模型的VBO
 void BufModel::UpdateDispModel(Mesh& model) 
@@ -319,8 +392,8 @@ void BufModel::UpdateDispModel(Mesh& model)
 	unsigned int vbo,ibo;
 	vao = this->vao_;
 	vbo = this->vbos_[0];
-
-	std::vector<VertexFormat> vertices;
+	std::vector<Vertex> vertices;
+	//std::vector<VertexFormat> vertices;
 	vertices.clear();
 	std::vector<unsigned int> indices;
 	int nVerts = model.n_verts_;
@@ -328,7 +401,8 @@ void BufModel::UpdateDispModel(Mesh& model)
 	
 	for (size_t kk = 0; kk < nVerts; kk++) 
 	{
-		vertices.push_back(VertexFormat(glm::vec3(model.position_(kk, 0), // verts
+		vertices.push_back(Vertex(glm::vec3(model.position_(kk, 0), // verts
+		//vertices.push_back(VertexFormat(glm::vec3(model.position_(kk, 0), // verts
 			model.position_(kk, 1),
 			model.position_(kk, 2)),
 			glm::vec4(model.color_(kk, 0) / 255.f,	// colors
@@ -348,7 +422,8 @@ void BufModel::UpdateDispModel(Mesh& model)
 	// 获取缓冲区的映射指针data
 	data = (GLfloat*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
 	// 拷贝我们的数据到指针所指向的位置
-	memcpy(data, &vertices[0], vertices.size() * sizeof(VertexFormat));
+	memcpy(data, &vertices[0], vertices.size() * sizeof(Vertex));
+	//memcpy(data, &vertices[0], vertices.size() * sizeof(VertexFormat));
 	// 使用完之后释放映射的指针
 	glUnmapBuffer(GL_ARRAY_BUFFER);
 
@@ -356,7 +431,7 @@ void BufModel::UpdateDispModel(Mesh& model)
 	return;
 }
 //comment end yqy180424
-
+#endif
 
 //  Draw():渲染模型，带模型矩阵变换的GLSL，此次渲染是渲染到framebuffer的texture
 void BufModel::Draw() 
@@ -369,7 +444,8 @@ void BufModel::Draw()
 			glMatrixMode(GL_MODELVIEW);
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glLoadIdentity();
-			glBindVertexArray(this->vao_);
+			glBindVertexArray(this->VAOId);
+			//glBindVertexArray(this->vao_);
 			glUseProgram(this->shader_program_);
 			glEnable(GL_TEXTURE_2D);
 			glActiveTexture(GL_TEXTURE0);
@@ -411,7 +487,8 @@ void BufModel::Draw()
 			unsigned int textureLocation = glGetUniformLocation(shader_program, "texture1");
 			glUniform1i(textureLocation, 0);
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glBindVertexArray(this->vao_);
+			glBindVertexArray(this->VAOId);
+			//glBindVertexArray(this->vao_);
 			glDrawElements(GL_TRIANGLES, 3 * this->nTri_, GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
 			glUseProgram(0);
@@ -466,7 +543,8 @@ void SolidSphere::Draw()
 				glUniform3f(glGetUniformLocation(shader_program, "ptColor"), this->r_, this->g_, this->b_);
 
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glBindVertexArray(this->vao_);
+			//glBindVertexArray(this->vao_);
+			glBindVertexArray(this->VAOId);
 			glDrawElements(GL_TRIANGLES, 3 * this->nTri_, GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
 			glUseProgram(0);
@@ -482,184 +560,87 @@ void SolidSphere::Draw()
 
 
 
-//add yqy180424
-void BufModel::draw(const Shader& shader) const
+//add yqy180425
+void BufModel::draw(const Shader& shader) const// 绘制Mesh
 {
-	for (std::vector<Mesh>::const_iterator it = this->meshes.begin(); this->meshes.end() != it; ++it)
+	if (VAOId == 0
+		|| VBOId == 0
+		|| EBOId == 0)
 	{
-		it->draw(shader);
+		return;
 	}
-}
-bool BufModel::load_obj(std::string filePath)
-{
-	Assimp::Importer importer;
-	if (filePath.empty())
+	shader.use();
+	glBindVertexArray(this->VAOId);
+	int diffuseCnt = 0, specularCnt = 0, texUnitCnt = 0;
+	for (std::vector<Texture>::const_iterator it = this->textures.begin();
+		this->textures.end() != it; ++it)
 	{
-		std::cerr << "Error:Model::loadModel, empty model file path." << std::endl;
-		return false;
-	}
-	const aiScene* sceneObjPtr = importer.ReadFile(filePath,
-		aiProcess_Triangulate | aiProcess_FlipUVs);
-	if (!sceneObjPtr
-		|| sceneObjPtr->mFlags == AI_SCENE_FLAGS_INCOMPLETE
-		|| !sceneObjPtr->mRootNode)
-	{
-		std::cerr << "Error:Model::loadModel, description: "
-			<< importer.GetErrorString() << std::endl;
-		return false;
-	}
-	this->modelFileDir = filePath.substr(0, filePath.find_last_of('/'));
-	if (!this->processNode(sceneObjPtr->mRootNode, sceneObjPtr))
-	{
-		std::cerr << "Error:Model::loadModel, process node failed." << std::endl;
-		return false;
-	}
-	return true;
-}
-/*
-* 递归处理模型的结点
-*/
-bool BufModel::processNode(const aiNode* node, const aiScene* sceneObjPtr)
-{
-	if (!node || !sceneObjPtr)
-	{
-		return false;
-	}
-	// 先处理自身结点
-	for (size_t i = 0; i < node->mNumMeshes; ++i)
-	{
-		// 注意node中的mesh是对sceneObject中mesh的索引
-		const aiMesh* meshPtr = sceneObjPtr->mMeshes[node->mMeshes[i]];
-		if (meshPtr)
+		switch (it->type)
 		{
-			Mesh meshObj;
-			if (this->processMesh(meshPtr, sceneObjPtr, meshObj))
-			{
-				this->meshes.push_back(meshObj);
-			}
+		case aiTextureType_DIFFUSE:
+		{
+			glActiveTexture(GL_TEXTURE0 + texUnitCnt);
+			glBindTexture(GL_TEXTURE_2D, it->id);
+			std::stringstream samplerNameStr;
+			samplerNameStr << "texture_diffuse" << diffuseCnt++;
+			glUniform1i(glGetUniformLocation(shader.programId,
+				samplerNameStr.str().c_str()), texUnitCnt++);
+		}
+		break;
+		case aiTextureType_SPECULAR:
+		{
+			glActiveTexture(GL_TEXTURE0 + texUnitCnt);
+			glBindTexture(GL_TEXTURE_2D, it->id);
+			std::stringstream samplerNameStr;
+			samplerNameStr << "texture_specular" << specularCnt++;
+			glUniform1i(glGetUniformLocation(shader.programId,
+				samplerNameStr.str().c_str()), texUnitCnt++);
+		}
+		break;
+		default:
+			std::cerr << "Warning::Mesh::draw, texture type" << it->type
+				<< " current not supported." << std::endl;
+			break;
 		}
 	}
-	// 处理孩子结点
-	for (size_t i = 0; i < node->mNumChildren; ++i)
-	{
-		this->processNode(node->mChildren[i], sceneObjPtr);
-	}
-	return true;
-}
-bool BufModel::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr, Mesh& meshObj)
-{
-	if (!meshPtr || !sceneObjPtr)
-	{
-		return false;
-	}
-	std::vector<Vertex> vertData;
-	std::vector<Texture> textures;
-	std::vector<GLuint> indices;
-	// 从Mesh得到顶点数据、法向量、纹理数据
-	for (size_t i = 0; i < meshPtr->mNumVertices; ++i)
-	{
-		Vertex vertex;
-		// 获取顶点位置
-		if (meshPtr->HasPositions())
-		{
-			vertex.position.x = meshPtr->mVertices[i].x;
-			vertex.position.y = meshPtr->mVertices[i].y;
-			vertex.position.z = meshPtr->mVertices[i].z;
-		}
-		// 获取纹理数据 目前只处理0号纹理
-		if (meshPtr->HasTextureCoords(0))
-		{
-			vertex.texCoords.x = meshPtr->mTextureCoords[0][i].x;
-			vertex.texCoords.y = meshPtr->mTextureCoords[0][i].y;
-		}
-		else
-		{
-			vertex.texCoords = glm::vec2(0.0f, 0.0f);
-		}
-		// 获取法向量数据
-		if (meshPtr->HasNormals())
-		{
-			vertex.normal.x = meshPtr->mNormals[i].x;
-			vertex.normal.y = meshPtr->mNormals[i].y;
-			vertex.normal.z = meshPtr->mNormals[i].z;
-		}
-		vertData.push_back(vertex);
-	}
-	// 获取索引数据
-	for (size_t i = 0; i < meshPtr->mNumFaces; ++i)
-	{
-		aiFace face = meshPtr->mFaces[i];
-		if (face.mNumIndices != 3)
-		{
-			std::cerr << "Error:Model::processMesh, mesh not transformed to triangle mesh." << std::endl;
-			return false;
-		}
-		for (size_t j = 0; j < face.mNumIndices; ++j)
-		{
-			indices.push_back(face.mIndices[j]);
-		}
-	}
-	// 获取纹理数据
-	if (meshPtr->mMaterialIndex >= 0)
-	{
-		const aiMaterial* materialPtr = sceneObjPtr->mMaterials[meshPtr->mMaterialIndex];
-		// 获取diffuse类型
-		std::vector<Texture> diffuseTexture;
-		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_DIFFUSE, diffuseTexture);
-		textures.insert(textures.end(), diffuseTexture.begin(), diffuseTexture.end());
-		// 获取specular类型
-		std::vector<Texture> specularTexture;
-		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_SPECULAR, specularTexture);
-		textures.insert(textures.end(), specularTexture.begin(), specularTexture.end());
-	}
-	meshObj.setData(vertData, textures, indices);
-	return true;
-}
-/*
-* 获取一个材质中的纹理
-*/
-bool BufModel::processMaterial(const aiMaterial* matPtr, const aiScene* sceneObjPtr,
-	const aiTextureType textureType, std::vector<Texture>& textures)
-{
-	textures.clear();
 
-	if (!matPtr
-		|| !sceneObjPtr)
-	{
-		return false;
-	}
-	if (matPtr->GetTextureCount(textureType) <= 0)
-	{
-		return true;
-	}
-	for (size_t i = 0; i < matPtr->GetTextureCount(textureType); ++i)
-	{
-		Texture text;
-		aiString textPath;
-		aiReturn retStatus = matPtr->GetTexture(textureType, i, &textPath);
-		if (retStatus != aiReturn_SUCCESS
-			|| textPath.length == 0)
-		{
-			std::cerr << "Warning, load texture type=" << textureType
-				<< "index= " << i << " failed with return value= "
-				<< retStatus << std::endl;
-			continue;
-		}
-		std::string absolutePath = this->modelFileDir + "/" + textPath.C_Str();
-		LoadedTextMapType::const_iterator it = this->loadedTextureMap.find(absolutePath);
-		if (it == this->loadedTextureMap.end()) // 检查是否已经加载过了
-		{
-			GLuint textId = TextureHelper::load2DTexture(absolutePath.c_str());
-			text.id = textId;
-			text.path = absolutePath;
-			text.type = textureType;
-			textures.push_back(text);
-			loadedTextureMap[absolutePath] = text;
-		}
-		else
-		{
-			textures.push_back(it->second);
-		}
-	}
-	return true;
+	glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	glUseProgram(0);
 }
+
+//  创建用于模型显示的GL相关内存
+//CreateDispModel：创建和设置显示模型的VAO, VBO, IBO
+void BufModel::CreateDispModel()  // 建立VAO,VBO等缓冲区
+{
+	glGenVertexArrays(1, &this->VAOId);
+	glGenBuffers(1, &this->VBOId);
+	glGenBuffers(1, &this->EBOId);
+
+	glBindVertexArray(this->VAOId);
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBOId);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * this->vertData.size(),
+		&this->vertData[0], GL_STATIC_DRAW);
+	// 顶点位置属性
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	// 顶点纹理坐标
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)(3 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(1);
+	// 顶点法向量属性
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)(5 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(2);
+	// 索引数据
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBOId);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)* this->indices.size(),
+		&this->indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+
+
+//add endyqy180425
