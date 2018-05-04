@@ -270,7 +270,44 @@ void BufModel::CreateDispModel(Mesh& model, bool isStatic)
 #endif
 
 
+//  创建用于模型显示的GL相关内存
+//CreateDispModel：创建和设置显示模型的VAO, VBO, IBO
+void BufModel::CreateDispModel()  // 建立VAO,VBO等缓冲区
+{
+	glGenVertexArrays(1, &this->VAOId);
+	glGenBuffers(1, &this->VBOId);
+	glGenBuffers(1, &this->EBOId);
 
+	glBindVertexArray(this->VAOId);
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBOId);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * this->vertData.size(),
+		&this->vertData[0], GL_STATIC_DRAW);
+	// 顶点位置属性
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	// 顶点纹理坐标
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)(3 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(1);
+	// 顶点法向量属性
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)(5 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(2);
+	// 索引数据
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBOId);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)* this->indices.size(),
+		&this->indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+
+
+//add endyqy180425
+
+#if 0
+//comment yqy180426
 //创建用于背景显示的GL相关内存
 //CreateBGplaneModel() :创建和设置背景的VAO, VBO, IBO，
 //背景坐标 - 1.0, -1.0, 0.99 、1.0, -1.0, 0.99 、 1.0, 1.0, 0.99、 - 1.0, 1.0, 0.99
@@ -333,41 +370,97 @@ void BufModel::CreateBGplaneModel()
 
 	return;
 }
+//comment end yqy180426
+#endif
 
 
+
+//创建用于背景显示的GL相关内存
+//CreateBGplaneModel() :创建和设置背景的VAO, VBO, IBO，
+//背景坐标 - 1.0, -1.0, 0.99 、1.0, -1.0, 0.99 、 1.0, 1.0, 0.99、 - 1.0, 1.0, 0.99
+void BufModel::CreateBGplaneModel()
+{
+	this->Reset();
+	glGenVertexArrays(1, &VAOId);
+	glBindVertexArray(VAOId);
+	std::vector<Vertex> vertices;
+	vertices.push_back(Vertex(glm::vec3(-1.0, -1.0, 0.99),
+		glm::vec2(0.0, 0.0)));
+	vertices.push_back(Vertex(glm::vec3(1.0, -1.0, 0.99),
+		glm::vec2(1.0, 0.0)));
+	vertices.push_back(Vertex(glm::vec3(1.0, 1.0, 0.99),
+		glm::vec2(1.0, 1.0)));
+	vertices.push_back(Vertex(glm::vec3(-1.0, 1.0, 0.99),
+		glm::vec2(0.0, 1.0)));
+	glGenBuffers(1, &VBOId);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOId);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4, &vertices[0], GL_STATIC_DRAW);
+
+	GLuint _indices[] =
+	{  // Note that we start from 0!
+		0, 1, 3,  // First Triangle
+		1, 2, 3   // Second Triangle
+	};
+
+	glGenBuffers(1, &EBOId);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOId);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(_indices), _indices, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)28);
+	glBindVertexArray(0);
+
+	this->nTri_ = 2;
+	this->isBg_ = true;
+
+	return;
+}
+
+
+//add yqy180426
 //更新模型数据的内存
 //UpdateDispModel：更新模型的VBO
 void BufModel::UpdateDispModel()
 {
-	unsigned int vao;
-	unsigned int vbo, ibo;
-	vao = this->vao_;
-	vbo = this->vbos_[0];
+	//unsigned int vao;
+	//unsigned int vbo, ibo;
+	////vao = this->vao_;
+	//vbo = this->vbos_[0];//vbos_包括vbo和ibo，vbos_[0]是vbo
 	std::vector<Vertex> vertices;
 	//std::vector<VertexFormat> vertices;
 	vertices.clear();
-	std::vector<unsigned int> indices;
+	//std::vector<unsigned int> indices2;
 	int nVerts = this->n_verts_;
 	int nTri = this->n_tri_;
-
-	for (size_t kk = 0; kk < nVerts; kk++)
+	for (size_t kk = 0; kk < nVerts; ++kk)
 	{
-		vertices.push_back(Vertex(glm::vec3(this->position_(kk, 0), // verts
-																	//vertices.push_back(VertexFormat(glm::vec3(model.position_(kk, 0), // verts
-			this->position_(kk, 1),
-			this->position_(kk, 2)),
-			glm::vec4(this->color_(kk, 0) / 255.f,	// colors
-				this->color_(kk, 1) / 255.f,
-				this->color_(kk, 2) / 255.f, 1.f),
-			glm::vec2(this->tex_coord_(kk, 0), // tex coord
-				this->tex_coord_(kk, 1)),
-			glm::vec3(this->normal_(kk, 0),  // normal
-				this->normal_(kk, 1),
-				this->normal_(kk, 2))));
+		vertices.push_back(Vertex(this->vertData[kk].position, this->vertData[kk].texCoords, this->vertData[kk].normal));
 	}
+	//for (int kk = 0; kk < nTri; ++kk)
+	//{
+	//	indices2.push_back(this->indices[kk]);
+	//	//indices.push_back(this->vertData[kk].tri[0]);
+	//}
+	//for (size_t kk = 0; kk < nVerts; kk++)
+	//{
+	//	vertices.push_back(Vertex(glm::vec3(this->position_(kk, 0), // verts
+	//																//vertices.push_back(VertexFormat(glm::vec3(model.position_(kk, 0), // verts
+	//		this->position_(kk, 1),
+	//		this->position_(kk, 2)),
+	//		glm::vec4(this->color_(kk, 0) / 255.f,	// colors
+	//			this->color_(kk, 1) / 255.f,
+	//			this->color_(kk, 2) / 255.f, 1.f),
+	//		glm::vec2(this->tex_coord_(kk, 0), // tex coord
+	//			this->tex_coord_(kk, 1)),
+	//		glm::vec3(this->normal_(kk, 0),  // normal
+	//			this->normal_(kk, 1),
+	//			this->normal_(kk, 2))));
+	//}
 	//std::cout << "Updating vertex buffer array <<<<<<<<<<<<<<<< ----> " << vertices.size() << " vertices" << std::endl;
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBindVertexArray(VAOId);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOId);
 	//将一个缓冲区对象中的数据映射为客户端中的地址空间
 	GLfloat* data;
 	// 获取缓冲区的映射指针data
@@ -381,6 +474,9 @@ void BufModel::UpdateDispModel()
 	glBindVertexArray(0);
 	return;
 }
+//add end yqy
+
+
 
 #if 0
 //comment  yqy180424
@@ -433,6 +529,137 @@ void BufModel::UpdateDispModel(Mesh& model)
 //comment end yqy180424
 #endif
 
+
+
+
+//  Draw():渲染模型，带模型矩阵变换的GLSL，此次渲染是渲染到framebuffer的texture
+void BufModel::Draw(const Shader& shader)const
+{
+	if (VAOId == 0
+		|| VBOId == 0
+		|| EBOId == 0)
+	{
+		return;
+	}
+	if (isDraw_)
+	{
+		// rendering
+		if (this->isBg_)
+		{
+			glMatrixMode(GL_MODELVIEW);//将当前矩阵指定为投影矩阵
+									   //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glLoadIdentity(); //然后把矩阵设为单位矩阵
+			glBindVertexArray(this->VAOId);
+			glBindVertexArray(this->VAOId);
+			shader.use();
+			glEnable(GL_TEXTURE_2D);
+			int diffuseCnt = 0, specularCnt = 0, texUnitCnt = 0;
+			for (std::vector<Texture>::const_iterator it = this->textures.begin();
+				this->textures.end() != it; ++it)
+			{
+				switch (it->type)
+				{
+				case aiTextureType_DIFFUSE://人脸模型进入这个case
+				{
+					//要使用纹理必须在使用之前激活对应的纹理单元，默认状态下0号纹理
+					//单元是激活的，因此即使没有显式地激活也能工作。激活并使用纹理
+					//的代码如下：
+					glActiveTexture(GL_TEXTURE0 + texUnitCnt);
+					glBindTexture(GL_TEXTURE_2D, it->id);
+					std::stringstream samplerNameStr;
+					samplerNameStr << "texture_diffuse" << diffuseCnt++;
+					glUniform1i(glGetUniformLocation(shader.programId,
+						samplerNameStr.str().c_str()), texUnitCnt++);
+					//上述glUniform1i将纹理单元作为整数传递给片元着色器，片元着色器
+					//中使用uniform变量对应这个纹理采样器，使用变量类型为: samplerNameStr.str().c_str()
+				}
+				break;
+				default:
+					std::cerr << "Warning::Mesh::draw, texture type" << it->type
+						<< " current not supported." << std::endl;
+					break;
+				}
+			}
+			//这里的索引绘制我们使用的函数是glDrawElements而不是glDrawArrays。第
+			//一个参数是要渲染的图元的类型(和glDrawArrays一样)；第二个参数是索引
+			//缓冲中用于产生图元的索引个数；后面的参数是每一个索引值的数据类型。
+			//必须要告诉GPU单个索引值的大小，否则GPU无法知道如何解析索引缓冲区。
+			//索引值可用的类型主要有：GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, 
+			//GL_UNSIGNED_INT。如果索引的范围很小应该选择小的数据类型来节省空间，
+			//如果索引范围很大自然就要根据需要选择更大的数据类型；最后一个参数
+			//告诉GPU从索引缓冲区起始位置到到第一个需要扫描的索引值得偏移byte数
+			//，这个在使用同一个索引缓冲来保存多个物体的索引时很有用，通过定义
+			//偏移量和索引个数可以告诉GPU去渲染哪一个物体，在我们的例子中我们从
+			//一开始扫描所以定义偏移量为0。注意最后一个参数的类型是GLvoid*，所
+			//以如果不是0的话必须要转换成那个参数类型。
+			glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+			glDisable(GL_TEXTURE_2D);
+			glBindVertexArray(0);
+			glUseProgram(0);
+		}
+		else
+		{
+			GLuint shader_program = this->shader_program_;
+			glm::mat4 modelview_mat = this->view_ * this->model_;
+			glm::mat4 proj_mat = this->proj_;
+			DirLight dir_light = this->dirLight_;
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+			glBindVertexArray(this->VAOId);
+			shader.use();
+
+			//glUseProgram(shader_program);
+			glUniformMatrix4fv(glGetUniformLocation(shader_program, "modelViewMatrix"), 1, GL_FALSE, glm::value_ptr(modelview_mat));
+			glUniformMatrix4fv(glGetUniformLocation(shader_program, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(proj_mat));
+			// Set rendering parameters -- dirlight only 
+			SetDirLight(shader_program, dir_light);
+			if (colorMode_ == 0)
+				glUniform1f(glGetUniformLocation(shader_program, "colorMode"), 0.0);
+			else if (colorMode_ == 1)
+				glUniform1f(glGetUniformLocation(shader_program, "colorMode"), 1.0);
+			else if (colorMode_ == 2)
+				glUniform1f(glGetUniformLocation(shader_program, "colorMode"), 2.0);
+			else
+				glUniform1f(glGetUniformLocation(shader_program, "colorMode"), 0.0);
+
+			glEnable(GL_TEXTURE_2D);
+
+			int diffuseCnt = 0, specularCnt = 0, texUnitCnt = 0;
+			for (std::vector<Texture>::const_iterator it = this->textures.begin();
+				this->textures.end() != it; ++it)
+			{
+				switch (it->type)
+				{
+				case aiTextureType_DIFFUSE://人脸模型进入这个case
+				{
+					glActiveTexture(GL_TEXTURE0 + texUnitCnt);
+					glBindTexture(GL_TEXTURE_2D, it->id);
+					std::stringstream samplerNameStr;
+					samplerNameStr << "texture_diffuse" << diffuseCnt++;
+					glUniform1i(glGetUniformLocation(shader.programId,
+						samplerNameStr.str().c_str()), texUnitCnt++);
+				}
+				break;
+				default:
+					std::cerr << "Warning::Mesh::draw, texture type" << it->type
+						<< " current not supported." << std::endl;
+					break;
+				}
+			}
+			glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+			glDisable(GL_TEXTURE_2D);
+			glBindVertexArray(0);
+			glUseProgram(0);
+		}
+	}
+	return;
+}
+
+
+#if 0
+//comment yqy180503
 //  Draw():渲染模型，带模型矩阵变换的GLSL，此次渲染是渲染到framebuffer的texture
 void BufModel::Draw() 
 {
@@ -441,17 +668,22 @@ void BufModel::Draw()
 		// rendering
 		if (this->isBg_) 
 		{
-			glMatrixMode(GL_MODELVIEW);
+			glMatrixMode(GL_MODELVIEW);//将当前矩阵指定为投影矩阵
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glLoadIdentity();
+			glLoadIdentity(); //然后把矩阵设为单位矩阵
 			glBindVertexArray(this->VAOId);
 			//glBindVertexArray(this->vao_);
 			glUseProgram(this->shader_program_);
 			glEnable(GL_TEXTURE_2D);
+			//要使用纹理必须在使用之前激活对应的纹理单元，默认状态下0号纹理
+			//单元是激活的，因此即使没有显式地激活也能工作。激活并使用纹理
+			//的代码如下：
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, this->tex_);
 			unsigned int textureLocation = glGetUniformLocation(this->shader_program_, "texture1");
 			glUniform1i(textureLocation, 0);
+			//上述glUniform1i将纹理单元作为整数传递给片元着色器，片元着色器
+			//中使用uniform变量对应这个纹理采样器，使用变量类型为: texture1
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 			glDisable(GL_TEXTURE_2D);
 			glUseProgram(0);
@@ -497,6 +729,9 @@ void BufModel::Draw()
 	}
 	return;
 }
+//comment end 180503
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 void SolidSphere::SetData(Eigen::MatrixXf pos) 
@@ -559,7 +794,7 @@ void SolidSphere::Draw()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
+#if 0
 //add yqy180425
 void BufModel::draw(const Shader& shader) const// 绘制Mesh
 {
@@ -608,39 +843,4 @@ void BufModel::draw(const Shader& shader) const// 绘制Mesh
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
-
-//  创建用于模型显示的GL相关内存
-//CreateDispModel：创建和设置显示模型的VAO, VBO, IBO
-void BufModel::CreateDispModel()  // 建立VAO,VBO等缓冲区
-{
-	glGenVertexArrays(1, &this->VAOId);
-	glGenBuffers(1, &this->VBOId);
-	glGenBuffers(1, &this->EBOId);
-
-	glBindVertexArray(this->VAOId);
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBOId);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * this->vertData.size(),
-		&this->vertData[0], GL_STATIC_DRAW);
-	// 顶点位置属性
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-		sizeof(Vertex), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	// 顶点纹理坐标
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
-		sizeof(Vertex), (GLvoid*)(3 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(1);
-	// 顶点法向量属性
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
-		sizeof(Vertex), (GLvoid*)(5 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(2);
-	// 索引数据
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBOId);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)* this->indices.size(),
-		&this->indices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-
-
-//add endyqy180425
+#endif

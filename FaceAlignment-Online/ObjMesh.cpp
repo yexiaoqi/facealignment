@@ -120,7 +120,8 @@ void Mesh::draw(const Shader& shader) const
 {
 	for (std::vector<BufModel>::const_iterator it = this->bufmodels.begin(); this->bufmodels.end() != it; ++it)
 	{
-		it->draw(shader);
+		it->Draw(shader);//add yqy180503
+		//it->draw(shader);//comment yqy180503
 	}
 }
 bool Mesh::load_obj(const std::string& filePath)
@@ -142,7 +143,7 @@ bool Mesh::load_obj(const std::string& filePath)
 		return false;
 	}
 	this->modelFileDir = filePath.substr(0, filePath.find_last_of('/'));
-	if (!this->processNode(sceneObjPtr->mRootNode, sceneObjPtr))
+	if (!this->processNode(sceneObjPtr->mRootNode, sceneObjPtr))//调用processNode
 	{
 		std::cerr << "Error:Model::loadModel, process node failed." << std::endl;
 		return false;
@@ -278,7 +279,8 @@ bool Mesh::processMaterial(const aiMaterial* matPtr, const aiScene* sceneObjPtr,
 				<< retStatus << std::endl;
 			continue;
 		}
-		std::string absolutePath = this->modelFileDir + "/" + textPath.C_Str();
+		//std::string absolutePath = this->modelFileDir + "/" + textPath.C_Str();//comment yqy180503
+		std::string absolutePath =  textPath.C_Str();//add yqy180503
 		LoadedTextMapType::const_iterator it = this->loadedTextureMap.find(absolutePath);
 		if (it == this->loadedTextureMap.end()) // 检查是否已经加载过了
 		{

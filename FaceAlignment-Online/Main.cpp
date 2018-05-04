@@ -213,10 +213,10 @@ void ReshapeCallback(int w, int h)
 	float _left = -(double)w / (double)h;
 	float _right = -_left;
 	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glFrustum(-1.0*aspect, 1.0*aspect, -1.0, 1.0, Focal, zFar);
-	glMatrixMode(GL_MODELVIEW);
+	glMatrixMode(GL_PROJECTION);//将当前矩阵指定为投影矩阵
+	glLoadIdentity(); //把矩阵设为单位矩阵
+	glFrustum(-1.0*aspect, 1.0*aspect, -1.0, 1.0, Focal, zFar);//调用glFrustum()或gluPerspective(),它们生成的矩阵会与当前的矩阵相乘,生成透视的效果
+	glMatrixMode(GL_MODELVIEW);//对模型视景的操作
 	glLoadIdentity();
 }
 
@@ -362,9 +362,9 @@ int main(int argc, char *argv[])
 	mGLRender.addModel(BufModel(), 1);//  增加模型
 	 //add yqy180424
 	mGLRender.models[1].CreateDispModel();//add yqy180426
-	Shader shader("model.vertex", "model.frag");
-	shader.use();
-	mGLRender.models[1].draw(shader);
+	//Shader shader("model.vertex", "model.frag");
+	//shader.use();
+	//mGLRender.models[1].draw(shader);
 	//add end180424
 	//mGLRender.models[1].CreateDispModel(false);//add yqy180425
 	//mGLRender.models[1].CreateDispModel(mImgRecon.recon_mesh_, false);//    创建dispmodel //comment yqy 180424

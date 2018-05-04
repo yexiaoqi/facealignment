@@ -124,6 +124,14 @@ struct Vertex
 		texCoords.x = texCoords.y = 0;
 	}
 
+	Vertex(const glm::vec3 &iPos, const glm::vec2 &iTex, const glm::vec3 &iNormal)
+	{
+		position = iPos;
+		texCoords = iTex;
+		normal = iNormal;
+		texColor.r = texColor.g = texColor.b = 0.0;	
+	}
+
 	Vertex(const glm::vec3 &iPos, const glm::vec4 &iColor, const glm::vec2 &itri)
 	{
 		position = iPos;
@@ -286,22 +294,47 @@ public:
 	{
 		shader_program_ = CreateProgram(vertexShaderFilename, fragmentShaderFilename);
 	}
+#if 0 
+	//comment yqy180503
 	/* texture */
 	void LoadTextureFile(const std::string& filename, unsigned int width, unsigned int height) { this->tex_ = LoadTexture(filename, width, height);}//没用到
-	void BufCreateTexture(unsigned int width, unsigned int height){ this->tex_ = CreateTexture(width, height); }//创建输入侧的背景
+	void BufCreateTexture(unsigned int width, unsigned int height)
+	{ 
+		this->tex_ = CreateTexture(width, height); 
+	}//创建输入侧的背景
 	void BufUpdateTexture(cv::Mat& image){ UpdateTexture(this->tex_, image); }//更新输入侧的背景
-
+//comment yqy180503
+#endif
+	
+//add yqy180503
+	void BufCreateTexture(unsigned int width, unsigned int height)
+	{
+		for (std::vector<Texture>::iterator it = this->textures.begin();
+			this->textures.end() != it; ++it)
+		{
+			it->id = CreateTexture(width, height);
+		}
+	}//创建输入侧的背景
+	void BufUpdateTexture(cv::Mat& image)
+	{ 
+		for (std::vector<Texture>::iterator it = this->textures.begin();
+			this->textures.end() != it; ++it)
+		{
+			UpdateTexture(it->id, image);
+		}		 
+	}//更新输入侧的背景
+	//add end
 
 
 //add yqy180425
-	void draw(const Shader& shader) const;// 绘制Mesh
+	//void draw(const Shader& shader) const;// 绘制Mesh
 	//add end yqy180425
 
 
 
 	/* render function */
-	void Draw();
-
+	//void Draw();//comment yqy180503
+	void Draw(const Shader& shader)const;//add yqy180503
 	/* pose parameters */
 	void Reset() 
 	{ 
@@ -309,8 +342,9 @@ public:
 		//vao_ = 0; //comment yqy180425
 		shader_program_ = 0; 
 		VBOId = 0;//add yqy180425
+		EBOId = 0;
 		//vbos_.clear(); //comment yqy180425
-		tex_ = 0; 
+		//tex_ = 0; //comment yqy180503
 		model_ = view_ = proj_ = glm::mat4(1.0f); 
 		nTri_ = 0; 
 		isBg_ = false; 
@@ -322,7 +356,7 @@ public:
 	unsigned int vao_; // vertex array object //comment yqy180425
 	unsigned int shader_program_; // shader program
 	std::vector<unsigned int> vbos_; // vertex buffer objects//comment yqy180425
-	GLuint tex_; // texture
+	//GLuint tex_; // texture//comment yqy180503
 	glm::mat4 model_, view_, proj_; // model & view & projection
 	DirLight dirLight_; // dir light
 	
@@ -368,7 +402,7 @@ public:
 	void SetData(Eigen::MatrixXf pos);
 	void SetColor(float r, float g, float b);
 	void SetScale(float scale);
-	void Draw();
+	void Draw();//comment yqy180503	
 	bool drawSphere_;
 	int exception_idx_;
 
