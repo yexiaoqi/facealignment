@@ -12,37 +12,64 @@
 
 
 
-
+//modify yqy180504
+//更新面法线和顶点法线 
 void Mesh::update_normal(BufModel &model)
 {
-
-	model.normal_.resize(model.n_verts_, 3);
-	model.face_normal_.resize(model.n_tri_, 3);
-	model.normal_.setZero();
-	model.face_normal_.setZero();
-	std::vector<float> area_sum(model.n_verts_, 0.f);
-	omp_lock_t writelock;
-	omp_init_lock(&writelock);
+	for (std::vector<BufModel>::iterator it = this->bufmodels.begin(); this->bufmodels.end() != it; ++it)
+	{
+		for (int ii = 0; ii <(it->n_verts_); ++ii)
+		{
+			it->vertData[ii].normal.x = 0;
+			it->vertData[ii].normal.y = 0;
+			it->vertData[ii].normal.z = 0;
+		}
+		for (int jj = 0; jj <(it->n_tri_); ++jj)
+		{
+			it->vertData[jj].face_normal.x = 0;
+			it->vertData[jj].face_normal.y = 0;
+			it->vertData[jj].face_normal.z = 0;
+		}
+		std::vector<float> area_sum(it->n_verts_, 0.f);
+		omp_lock_t writelock;
+		omp_init_lock(&writelock);
 
 #pragma omp parallel for
+		for (int i = 0; i < (it->n_tri_); ++i)
+		{
+			auto vidx0 = it->indices[i];
+		}
+	}
+	
+	//comment yqy180504
+	//model.normal_.resize(model.n_verts_, 3);//构建顶点数*3矩阵
+	//model.face_normal_.resize(model.n_tri_, 3);//构建面数*3矩阵
+	//model.normal_.setZero();//初始化为0
+	//model.face_normal_.setZero();//初始化为0
+	//std::vector<float> area_sum(model.n_verts_, 0.f);//创建一个vector，元素个数为顶点数，值初始化为0
+	//comment end yqy180504
+//	omp_lock_t writelock;
+//	omp_init_lock(&writelock);
+//
+//#pragma omp parallel for
 	//原理请看【一步步学OpenGL 18】 -《漫射光》 - Mr_厚厚的博客 - CSDN博客中CalcNormals函数部分
 	for (int i = 0; i<model.n_tri_; ++i) {
-		auto vidx0 = model.tri_list_(i, 0);
+		auto vidx0 = model.tri_list_(i, 0);//顶点索引
 		auto vidx1 = model.tri_list_(i, 1);
 		auto vidx2 = model.tri_list_(i, 2);
 
-		auto v0 = Eigen::Vector3f(model.position_.row(vidx0));
+		auto v0 = Eigen::Vector3f(model.position_.row(vidx0));//根据索引搜索取出每个三角形的三个顶点
 		auto v1 = Eigen::Vector3f(model.position_.row(vidx1));
 		auto v2 = Eigen::Vector3f(model.position_.row(vidx2));
 
 		auto v0v1 = v1 - v0;
 		auto v0v2 = v2 - v0;
 		auto n = v0v2.cross(v0v1);
+//对于每个三角形法向量都是通过计算从第一个顶点出发到其他两个顶点的两条边向量的差积得到的。
 		double area = n.norm();
-		//对于每个三角形法向量都是通过计算从第一个顶点出发到其他两个顶点的两条边向量的差积得到的。在向量累加之前要求先将其单位化，因为差积运算后的
-		//结果不一定是单位向量。
+		//在向量累加之前要求先将其单位化，因为差积运算后的结果不一定是单位向量。
 		omp_set_lock(&writelock);
-		//累加计算三角形每个顶点的法向量
+		//累加计算三角形每个顶点的法向量,因为一个顶点可以被多个三角形公用，所以要计算这个顶点在所有三角形的法向量之和
 		model.normal_.row(vidx0) += n;
 		model.normal_.row(vidx1) += n;
 		model.normal_.row(vidx2) += n;
@@ -58,7 +85,7 @@ void Mesh::update_normal(BufModel &model)
 #pragma omp parallel for
 	for (int i = 0; i<model.n_verts_; ++i)
 	{
-		model.normal_.row(i) /= area_sum[i];
+		model.normal_.row(i) /= area_sum[i];//遍历顶点数组并单位化每个顶点的法向量。这样操作等同于将累加的向量进行平均处理并留下一个为单位长度的顶点法线。
 	}
 }
 #if 0
@@ -134,6 +161,9 @@ bool Mesh::load_obj(const std::string& filePath)
 	}
 	const aiScene* sceneObjPtr = importer.ReadFile(filePath,
 		aiProcess_Triangulate | aiProcess_FlipUVs);
+//ReadFile函数中第二个参数就是后处理选项，它是一个枚举类型aiPostProcessSteps，可以使用位或操作包含多个选项，例如
+//选项aiProcess_MakeLeftHanded表示将默认的右手系坐标数据转换为左手系坐标数据，aiProcess_Triangulate选项将索引数
+//据多余3个的多边形划分为多个三角形，方便我们使用三角形进行绘制。
 	if (!sceneObjPtr
 		|| sceneObjPtr->mFlags == AI_SCENE_FLAGS_INCOMPLETE
 		|| !sceneObjPtr->mRootNode)
@@ -167,7 +197,7 @@ bool Mesh::processNode(const aiNode* node, const aiScene* sceneObjPtr)
 		if (meshPtr)
 		{
 			BufModel meshObj;
-			if (this->processMesh(meshPtr, sceneObjPtr, meshObj))
+			if (this->processMesh(meshPtr, sceneObjPtr, meshObj))//调用processMesh
 			{
 				this->bufmodels.push_back(meshObj);
 			}
@@ -176,7 +206,7 @@ bool Mesh::processNode(const aiNode* node, const aiScene* sceneObjPtr)
 	// 处理孩子结点
 	for (size_t i = 0; i < node->mNumChildren; ++i)
 	{
-		this->processNode(node->mChildren[i], sceneObjPtr);
+		this->processNode(node->mChildren[i], sceneObjPtr);//自身递归
 	}
 	return true;
 }
@@ -239,11 +269,11 @@ bool Mesh::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr, BufMod
 		const aiMaterial* materialPtr = sceneObjPtr->mMaterials[meshPtr->mMaterialIndex];
 		// 获取diffuse类型
 		std::vector<Texture> diffuseTexture;
-		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_DIFFUSE, diffuseTexture);
+		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_DIFFUSE, diffuseTexture);//调用processMaterial
 		textures.insert(textures.end(), diffuseTexture.begin(), diffuseTexture.end());
 		// 获取specular类型
 		std::vector<Texture> specularTexture;
-		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_SPECULAR, specularTexture);
+		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_SPECULAR, specularTexture); // 调用processMaterial
 		textures.insert(textures.end(), specularTexture.begin(), specularTexture.end());
 	}
 	meshObj.setData(vertData, textures, indices);

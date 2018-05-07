@@ -238,8 +238,10 @@ public:
 	Eigen::MatrixXf face_normal_;
 	Eigen::MatrixXi tri_list_;
 	// number of vertices & triangles
+	//comment yqy180504
 	int n_verts_;
 	int n_tri_;
+	//end comment yqy180504
 	bool request_tex_coord_ = true;
 	
 
@@ -368,7 +370,7 @@ public:
 
 	//add yqy180425
 	std::vector<Vertex> vertData;
-	std::vector<GLuint> indices;
+	std::vector<GLuint> indices;//面的索引而不是顶点的索引
 	std::vector<Texture> textures;
 	GLuint VAOId, VBOId, EBOId;
 	void CreateDispModel();//assimp里的setupmesh

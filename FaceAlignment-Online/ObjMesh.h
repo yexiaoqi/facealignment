@@ -110,6 +110,10 @@ public:
 	//add end yqy180424
 	BufModel _bufmodel;
 	std::vector<BufModel> bufmodels; // ±£¥ÊMesh
+	//add yqy180504
+	/*int n_verts_;
+	int n_tri_;*/
+	//add end yqy180504
 private:
 	
 	
