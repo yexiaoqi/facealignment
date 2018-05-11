@@ -246,14 +246,14 @@ int main(int argc, char *argv[])
 	std::cout << m_bsFolder << std::endl;
 	//std::string m_landmarkFolder = mParser.get_landmarkFolder();//得到landmarkfolder
 	// load blendshape
-	if (!m_bsModelBin.empty())//    if m_bsModelBin非空：调用Models中的LoadBsBin
-		mImgRecon.bsData_.LoadBsBin(m_bsModelBin, m_numBs);
-	else//else 调用Models中的LoadBs（初次加载肯定进else）
+	//if (!m_bsModelBin.empty())//    if m_bsModelBin非空：调用Models中的LoadBsBin
+	//	mImgRecon.bsData_.LoadBsBin(m_bsModelBin, m_numBs);
+	//else//else 调用Models中的LoadBs（初次加载肯定进else）
 		mImgRecon.bsData_.LoadBs(m_bsFolder, m_numBs);//bsFolder =data/model_yqy_20170330_tri 加载51个.obj文件
 	mImgRecon.recon_mesh_ = mImgRecon.bsData_.blendshapes_[0];//neural表情模型作为recon_mesh  
 	//上面一句LoadBs中有blendshapes_.push_back(obj_mesh); blendshapes_就是一个mesh结构
-	mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
-	//mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425//recon_mesh更新法线，根据面法线算出点法线
+	//mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
+	mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425//recon_mesh更新法线，根据面法线算出点法线
 	// load index3d
 	mImgRecon.numPts_ = m_numLandmark;//numPts_为68
 	mImgRecon.LoadIndex3D(m_indexFile);//加载index3d得到index3D_ //从data/jisy-20161215/68markers.txt加载
@@ -359,9 +359,10 @@ int main(int argc, char *argv[])
 
 	//   准备模型  B. prepare model
 	
-	mGLRender.addModel(BufModel(), 1);//  增加模型
+	//mGLRender.addModel(BufModel(), 1);//  增加模型//comment yqy180513
 	 //add yqy180424
-	mGLRender.models[1].CreateDispModel();//add yqy180426
+	mGLRender.addObjMesh(ObjMesh(), 1);
+	mGLRender.objmeshs[1].CreateDispModel();//add yqy180426
 	//Shader shader("model.vertex", "model.frag");
 	//shader.use();
 	//mGLRender.models[1].draw(shader);
@@ -375,11 +376,11 @@ int main(int argc, char *argv[])
 	{		// if result review mode & update model
 		mImgRecon.UpdateMesh(mVideoRes.bsVideo_[frameCnt].params_);
 		//comment yqy 180425
-		//mImgRecon.recon_mesh_.update_normal();//更新法线
+		mImgRecon.recon_mesh_.update_normal();//更新法线
 		//mGLRender.models[1].UpdateDispModel(mImgRecon.recon_mesh_);
 		//comment endyqy 180425
 		//add yqy180425
-		mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线
+		//mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线
 		mGLRender.models[1].UpdateDispModel();
 		//add end yqy180425
 	}
@@ -555,8 +556,8 @@ void KeyboardCallback(unsigned char key, int x, int y)
 		mVideoRes.bsVideo_.push_back(mImgRecon.recon_model_);
 		// 2 - post display result
 		mImgRecon.UpdateMesh(mImgRecon.recon_model_.params_);
-		//mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425
-		mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
+		mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425
+		//mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
 		//mImgRecon.UpdateModelMat();
 		mImgRecon.UpdateProjectionMat();
 		mImgRecon.UpdateLandmarkPos();
@@ -630,8 +631,8 @@ void RenderCallback()
 		}
 
 		mImgRecon.UpdateMesh(mFrameRes.params_);//  更新mesh
-		//mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425
-		mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
+		mImgRecon.recon_mesh_.update_normal();//更新法线//comment yqy 180425
+		//mImgRecon.recon_mesh_.update_normal(mGLRender.models[1]);//更新法线//add yqy180425
 		//mImgRecon.UpdateModelMat();//mat translate
 		mImgRecon.UpdateProjectionMat();//更新投影矩阵
 		mImgRecon.UpdateLandmarkPos();//更新landmark位置

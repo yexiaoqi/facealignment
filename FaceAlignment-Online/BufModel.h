@@ -19,6 +19,10 @@
 #include <opencv2\opencv.hpp>
 #include "shader.h"
 
+
+
+
+
 #if 0
 //comment yqy180425
 /* vertex format */
@@ -101,6 +105,81 @@ struct Texture
 	aiTextureType type;
 	std::string path;
 };
+#if 0
+struct Vertex
+{
+	//position,texCoords,normal声明的顺序不能颠倒，是前三个
+	Eigen::Vector3f position;
+	Eigen::Vector2f texCoords;
+	Eigen::Vector3f normal;
+	//glm::vec3 face_normal;//一个点不可能有面法线这个量
+	Eigen::Vector4f texColor;
+	Eigen::Vector2f tri;
+	
+	Vertex()
+	{
+	}
+	Vertex(const Eigen::Vector3f &iPos, const Eigen::Vector4f &iColor)
+	{
+		
+		position = iPos;
+		texColor = iColor;
+		normal.x = normal.y = normal.z = 0;
+		texCoords.x = texCoords.y = 0;
+	}
+
+	Vertex(const Eigen::Vector3f &iPos, const Eigen::Vector2f &iTex, const Eigen::Vector3f &iNormal)
+	{
+		position = iPos;
+		texCoords = iTex;
+		normal = iNormal;
+		texColor.x = texColor.y = texColor.z = 0.0;
+	}
+
+	Vertex(const Eigen::Vector3f &iPos, const Eigen::Vector4f &iColor, const Eigen::Vector2f &itri)
+	{
+		position = iPos;
+		texColor = iColor;
+		tri = itri;
+		normal.x = normal.y = normal.z = 0;
+		texCoords.x = texCoords.y = 0;
+	}
+
+	Vertex(const Eigen::Vector3f &iPos, const Eigen::Vector2f &iTex)
+	{
+		position = iPos;
+		texCoords = iTex;
+		texColor.x = texColor.y = texColor.z = 0.0;
+		normal.x = normal.y = normal.z = 0;
+	}
+
+	Vertex(const Eigen::Vector3f &iPos, const Eigen::Vector4f &iColor, const Eigen::Vector3f &iNormal)
+	{
+		position = iPos;
+		texColor = iColor;
+		normal = iNormal;
+		texCoords.x = texCoords.y = 0;
+	}
+
+	Vertex(const Eigen::Vector3f &iPos, const Eigen::Vector4f &iColor, const Eigen::Vector3f &iNormal, const Eigen::Vector2f &itri)
+	{
+		position = iPos;
+		texColor = iColor;
+		normal = iNormal;
+		tri = itri;
+		texCoords.x = texCoords.y = 0;
+	}
+
+	Vertex(const Eigen::Vector3f &iPos, const Eigen::Vector4f &iColor, const Eigen::Vector2f &iTex, const Eigen::Vector3f &iNormal)
+	{
+		position = iPos;
+		texColor = iColor;
+		texCoords = iTex;
+		normal = iNormal;
+	}
+
+};
+#endif
 #if 1
 /* vertex format */
 //add yqy180425
@@ -110,7 +189,7 @@ struct Vertex
 	glm::vec3 position;
 	glm::vec2 texCoords;
 	glm::vec3 normal;
-	glm::vec3 face_normal;
+	//glm::vec3 face_normal;//一个点不可能有面法线这个量
 	glm::vec4 texColor;
 	glm::vec2 tri;
 	Vertex()
@@ -221,14 +300,16 @@ class BufModel
 public:
 	//add yqy180425
 	BufModel() :VAOId(0), VBOId(0), EBOId(0) { Reset(); }
-	BufModel(const std::vector<Vertex>& vertData,
+	BufModel(
+	//BufModel(const std::vector<Vertex>& vertData,
 		const std::vector<Texture> & textures,
-		const std::vector<GLuint>& indices) :VAOId(0), VBOId(0), EBOId(0) // 构造一个Mesh
+		const std::vector<GLuint>& indices) :VAOId(0), VBOId(0), EBOId(0),n_verts_(0), n_tri_(0)// 构造一个Mesh
 	{
 		Reset();
-		setData(vertData, textures, indices);
+		setData(textures, indices);
+		//setData(vertData, textures, indices);
 	}
-
+	//add yqy180512
 	// vertices - position & color & normal & tex coordinate
 	Eigen::MatrixXf position_;
 	Eigen::MatrixXf color_;
@@ -237,27 +318,27 @@ public:
 	// triangle - face normal & triangle list
 	Eigen::MatrixXf face_normal_;
 	Eigen::MatrixXi tri_list_;
-	// number of vertices & triangles
-	//comment yqy180504
+	//add end180512
+
 	int n_verts_;
 	int n_tri_;
 	//end comment yqy180504
 	bool request_tex_coord_ = true;
 	
 
-
-	void setData(const std::vector<Vertex>& vertData,
+	void setData(
+	//void setData(const std::vector<Vertex>& vertData,
 		const std::vector<Texture> & textures,
 		const std::vector<GLuint>& indices)
 	{
-		this->vertData = vertData;
+		//this->vertData = vertData;
 		this->indices = indices;
 		this->textures = textures;
-		if (!vertData.empty() && !indices.empty())
-		{
-			//this->CreateDispModel();
-			//this->setupMesh();//comment yqy180426
-		}
+		//if (!vertData.empty() && !indices.empty())
+		//{
+		//	//this->CreateDispModel();
+		//	//this->setupMesh();//comment yqy180426
+		//}
 	}
 	void final() const
 	{
@@ -369,12 +450,20 @@ public:
 	int colorMode_;
 
 	//add yqy180425
-	std::vector<Vertex> vertData;
+	//std::vector<Vertex> vertData;
 	std::vector<GLuint> indices;//面的索引而不是顶点的索引
 	std::vector<Texture> textures;
+	std::vector<aiFace> tri_list;//add yqy180511
+	std::vector<Eigen::Vector3f> face_normal;//add yqy180511
 	GLuint VAOId, VBOId, EBOId;
-	void CreateDispModel();//assimp里的setupmesh
+	void CreateDispModelbuf();//assimp里的setupmesh
 	//add end yqy180425
+
+	bool processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr);
+	bool processMaterial(const aiMaterial* matPtr, const aiScene* sceneObjPtr,
+		const aiTextureType textureType, std::vector<Texture>& textures);
+	typedef std::map<std::string, Texture> LoadedTextMapType; // key = texture file path
+	LoadedTextMapType loadedTextureMap; // 保存已经加载的纹理
 
 };
 

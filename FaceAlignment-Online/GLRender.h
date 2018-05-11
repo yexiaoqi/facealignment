@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BufModel.h"
-
+#include"ObjMesh.h"
 #include <Eigen\Eigen>
 #include <opencv2\opencv.hpp>
 #include <vector>
@@ -28,9 +28,10 @@ public:
 
 public:
 	// add models in this part
+	std::map<int, ObjMesh>objmeshs;//add yqy180513
 	std::map<int, BufModel> models;
 	std::map<int, SolidSphere> spheres;
-
+	void addObjMesh(ObjMesh &objmesh, int modelIdx) { objmeshs[modelIdx] = objmesh; }//add yqy180513
 	void addModel(BufModel& model, int modelIdx) { models[modelIdx] = model; }
 	void addSphere(SolidSphere& model, int modelIdx) { spheres[modelIdx] = model; }
 	void deleteModel(int modelIdx) { models.erase(modelIdx); }

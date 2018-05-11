@@ -14,21 +14,25 @@
 
 //modify yqy180504
 //更新面法线和顶点法线 
-void Mesh::update_normal(BufModel &model)
+void Mesh::update_normal()
 {
 	for (std::vector<BufModel>::iterator it = this->bufmodels.begin(); this->bufmodels.end() != it; ++it)
 	{
-		for (int ii = 0; ii <(it->n_verts_); ++ii)
+		it->vertData.resize(it->n_verts_);
+		it->face_normal.resize(it->n_tri_);
+		for (int ii = 0; ii < (it->n_verts_); ++ii)
 		{
 			it->vertData[ii].normal.x = 0;
 			it->vertData[ii].normal.y = 0;
 			it->vertData[ii].normal.z = 0;
-		}
-		for (int jj = 0; jj <(it->n_tri_); ++jj)
+		}		
+		for (int jj = 0; jj < (it->n_tri_); ++jj)
 		{
-			it->vertData[jj].face_normal.x = 0;
-			it->vertData[jj].face_normal.y = 0;
-			it->vertData[jj].face_normal.z = 0;
+			it->face_normal[jj] = Eigen::Vector3f(0, 0, 0);
+			//如果像下面这么赋值会出现=作为左操作数的问题,左右两边数据类型不一样
+			/*it->face_normal[jj].x = 0;
+			it->face_normal[jj].y = 0;
+			it->face_normal[jj].z = 0;*/
 		}
 		std::vector<float> area_sum(it->n_verts_, 0.f);
 		omp_lock_t writelock;
@@ -37,55 +41,83 @@ void Mesh::update_normal(BufModel &model)
 #pragma omp parallel for
 		for (int i = 0; i < (it->n_tri_); ++i)
 		{
-			auto vidx0 = it->indices[i];
+			auto vidx0 = it->tri_list[i].mIndices[0];//第i个三角形的第一个顶点vidx0
+			auto vidx1 = it->tri_list[i].mIndices[1]; //第i个三角形的第2个顶点
+			auto vidx2 = it->tri_list[i].mIndices[2]; // 第i个三角形的第3个顶点
+			auto v0 = Eigen::Vector3f(it->vertData[vidx0].position.x);//顶点vidx0的x坐标
+			auto v1 = Eigen::Vector3f(it->vertData[vidx1].position.y);
+			auto v2 = Eigen::Vector3f(it->vertData[vidx2].position.z);
+			auto v0v1 = v1 - v0;
+			auto v0v2 = v2 - v0;
+			auto n = v0v2.cross(v0v1);
+			double area = n.norm();
+			omp_set_lock(&writelock);
+			//注意由于n是eigen：vector3f型，不能直接it->vertData[vidx0].normal +=n
+			it->vertData[vidx0].normal += glm::vec3(n(vidx0,0), n(vidx0, 1), n(vidx0, 2));
+			it->vertData[vidx1].normal += glm::vec3(n(vidx1, 0), n(vidx1, 1), n(vidx1, 2));
+			it->vertData[vidx2].normal += glm::vec3(n(vidx2, 0), n(vidx2, 1), n(vidx2, 2));
+
+			area_sum[vidx0] += area;
+			area_sum[vidx1] += area;
+			area_sum[vidx2] += area;
+			omp_unset_lock(&writelock);
+			n.normalize();
+			it->face_normal[i] = n;
 		}
-	}
-	
-	//comment yqy180504
-	//model.normal_.resize(model.n_verts_, 3);//构建顶点数*3矩阵
-	//model.face_normal_.resize(model.n_tri_, 3);//构建面数*3矩阵
-	//model.normal_.setZero();//初始化为0
-	//model.face_normal_.setZero();//初始化为0
-	//std::vector<float> area_sum(model.n_verts_, 0.f);//创建一个vector，元素个数为顶点数，值初始化为0
-	//comment end yqy180504
-//	omp_lock_t writelock;
-//	omp_init_lock(&writelock);
-//
-//#pragma omp parallel for
-	//原理请看【一步步学OpenGL 18】 -《漫射光》 - Mr_厚厚的博客 - CSDN博客中CalcNormals函数部分
-	for (int i = 0; i<model.n_tri_; ++i) {
-		auto vidx0 = model.tri_list_(i, 0);//顶点索引
-		auto vidx1 = model.tri_list_(i, 1);
-		auto vidx2 = model.tri_list_(i, 2);
-
-		auto v0 = Eigen::Vector3f(model.position_.row(vidx0));//根据索引搜索取出每个三角形的三个顶点
-		auto v1 = Eigen::Vector3f(model.position_.row(vidx1));
-		auto v2 = Eigen::Vector3f(model.position_.row(vidx2));
-
-		auto v0v1 = v1 - v0;
-		auto v0v2 = v2 - v0;
-		auto n = v0v2.cross(v0v1);
-//对于每个三角形法向量都是通过计算从第一个顶点出发到其他两个顶点的两条边向量的差积得到的。
-		double area = n.norm();
-		//在向量累加之前要求先将其单位化，因为差积运算后的结果不一定是单位向量。
-		omp_set_lock(&writelock);
-		//累加计算三角形每个顶点的法向量,因为一个顶点可以被多个三角形公用，所以要计算这个顶点在所有三角形的法向量之和
-		model.normal_.row(vidx0) += n;
-		model.normal_.row(vidx1) += n;
-		model.normal_.row(vidx2) += n;
-		area_sum[vidx0] += area;
-		area_sum[vidx1] += area;
-		area_sum[vidx2] += area;
-		omp_unset_lock(&writelock);
-		n.normalize();
-		model.face_normal_.row(i) = n;//面法线
-	}
-	omp_destroy_lock(&writelock);
-
+		omp_destroy_lock(&writelock);
 #pragma omp parallel for
-	for (int i = 0; i<model.n_verts_; ++i)
-	{
-		model.normal_.row(i) /= area_sum[i];//遍历顶点数组并单位化每个顶点的法向量。这样操作等同于将累加的向量进行平均处理并留下一个为单位长度的顶点法线。
+		for (int i = 0; i< (it->n_verts_); ++i)
+		{
+			it->vertData[i].normal /= area_sum[i];
+		}
+		//}
+
+		//comment yqy180504
+		//model.normal_.resize(model.n_verts_, 3);//构建顶点数*3矩阵
+		//model.face_normal_.resize(model.n_tri_, 3);//构建面数*3矩阵
+		//model.normal_.setZero();//初始化为0
+		//model.face_normal_.setZero();//初始化为0
+		//std::vector<float> area_sum(model.n_verts_, 0.f);//创建一个vector，元素个数为顶点数，值初始化为0
+		//comment end yqy180504
+	//	omp_lock_t writelock;
+	//	omp_init_lock(&writelock);
+	//
+	//#pragma omp parallel for
+		//原理请看【一步步学OpenGL 18】 -《漫射光》 - Mr_厚厚的博客 - CSDN博客中CalcNormals函数部分
+	//	for (int i = 0; i<model.n_tri_; ++i) {
+	//		auto vidx0 = model.tri_list_(i, 0);//顶点索引
+	//		auto vidx1 = model.tri_list_(i, 1);
+	//		auto vidx2 = model.tri_list_(i, 2);
+	//
+	//		auto v0 = Eigen::Vector3f(model.position_.row(vidx0));//根据索引搜索取出每个三角形的三个顶点
+	//		auto v1 = Eigen::Vector3f(model.position_.row(vidx1));
+	//		auto v2 = Eigen::Vector3f(model.position_.row(vidx2));
+	//
+	//		auto v0v1 = v1 - v0;
+	//		auto v0v2 = v2 - v0;
+	//		auto n = v0v2.cross(v0v1);
+	////对于每个三角形法向量都是通过计算从第一个顶点出发到其他两个顶点的两条边向量的差积得到的。
+	//		double area = n.norm();
+	//		//在向量累加之前要求先将其单位化，因为差积运算后的结果不一定是单位向量。
+	//		omp_set_lock(&writelock);
+	//		//累加计算三角形每个顶点的法向量,因为一个顶点可以被多个三角形公用，所以要计算这个顶点在所有三角形的法向量之和
+	//		model.normal_.row(vidx0) += n;
+	//		model.normal_.row(vidx1) += n;
+	//		model.normal_.row(vidx2) += n;
+	//		area_sum[vidx0] += area;
+	//		area_sum[vidx1] += area;
+	//		area_sum[vidx2] += area;
+	//		omp_unset_lock(&writelock);
+	//		n.normalize();
+	//		model.face_normal_.row(i) = n;//面法线
+	//	}
+		/*omp_destroy_lock(&writelock);*/
+
+//#pragma omp parallel for
+//		for (int i = 0; i < model.n_verts_; ++i)
+//		{
+//			model.normal_.row(i) /= area_sum[i];//遍历顶点数组并单位化每个顶点的法向量。这样操作等同于将累加的向量进行平均处理并留下一个为单位长度的顶点法线。
+//		}
 	}
 }
 #if 0
@@ -139,6 +171,7 @@ void update_normal()
 	}
 
 }
+}
 //comment end yqy180425
 #endif
 
@@ -185,11 +218,13 @@ bool Mesh::load_obj(const std::string& filePath)
 */
 bool Mesh::processNode(const aiNode* node, const aiScene* sceneObjPtr)
 {
+
 	if (!node || !sceneObjPtr)
 	{
 		return false;
 	}
 	// 先处理自身结点
+	std::cout << "node->mNumMeshes=" << node->mNumMeshes << std::endl;
 	for (size_t i = 0; i < node->mNumMeshes; ++i)
 	{
 		// 注意node中的mesh是对sceneObject中mesh的索引
@@ -197,134 +232,18 @@ bool Mesh::processNode(const aiNode* node, const aiScene* sceneObjPtr)
 		if (meshPtr)
 		{
 			BufModel meshObj;
-			if (this->processMesh(meshPtr, sceneObjPtr, meshObj))//调用processMesh
+			if (meshObj.processMesh(meshPtr, sceneObjPtr))
 			{
-				this->bufmodels.push_back(meshObj);
+				//_bufmodel = meshObj;//add yqy180425
+				this->bufmodels.push_back(meshObj);//comment yqy180425
+
 			}
 		}
 	}
 	// 处理孩子结点
 	for (size_t i = 0; i < node->mNumChildren; ++i)
 	{
-		this->processNode(node->mChildren[i], sceneObjPtr);//自身递归
-	}
-	return true;
-}
-bool Mesh::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr, BufModel& meshObj)
-{
-	if (!meshPtr || !sceneObjPtr)
-	{
-		return false;
-	}
-	std::vector<Vertex> vertData;
-	std::vector<Texture> textures;
-	std::vector<GLuint> indices;
-	// 从Mesh得到顶点数据、法向量、纹理数据
-	for (size_t i = 0; i < meshPtr->mNumVertices; ++i)
-	{
-		Vertex vertex;
-		// 获取顶点位置
-		if (meshPtr->HasPositions())
-		{
-			vertex.position.x = meshPtr->mVertices[i].x;
-			vertex.position.y = meshPtr->mVertices[i].y;
-			vertex.position.z = meshPtr->mVertices[i].z;
-		}
-		// 获取纹理数据 目前只处理0号纹理
-		if (meshPtr->HasTextureCoords(0))
-		{
-			vertex.texCoords.x = meshPtr->mTextureCoords[0][i].x;
-			vertex.texCoords.y = meshPtr->mTextureCoords[0][i].y;
-		}
-		else
-		{
-			vertex.texCoords = glm::vec2(0.0f, 0.0f);
-		}
-		// 获取法向量数据
-		if (meshPtr->HasNormals())
-		{
-			vertex.normal.x = meshPtr->mNormals[i].x;
-			vertex.normal.y = meshPtr->mNormals[i].y;
-			vertex.normal.z = meshPtr->mNormals[i].z;
-		}
-		vertData.push_back(vertex);
-	}
-	// 获取索引数据
-	for (size_t i = 0; i < meshPtr->mNumFaces; ++i)
-	{
-		aiFace face = meshPtr->mFaces[i];
-		if (face.mNumIndices != 3)
-		{
-			std::cerr << "Error:Model::processMesh, mesh not transformed to triangle mesh." << std::endl;
-			return false;
-		}
-		for (size_t j = 0; j < face.mNumIndices; ++j)
-		{
-			indices.push_back(face.mIndices[j]);
-		}
-	}
-	// 获取纹理数据
-	if (meshPtr->mMaterialIndex >= 0)
-	{
-		const aiMaterial* materialPtr = sceneObjPtr->mMaterials[meshPtr->mMaterialIndex];
-		// 获取diffuse类型
-		std::vector<Texture> diffuseTexture;
-		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_DIFFUSE, diffuseTexture);//调用processMaterial
-		textures.insert(textures.end(), diffuseTexture.begin(), diffuseTexture.end());
-		// 获取specular类型
-		std::vector<Texture> specularTexture;
-		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_SPECULAR, specularTexture); // 调用processMaterial
-		textures.insert(textures.end(), specularTexture.begin(), specularTexture.end());
-	}
-	meshObj.setData(vertData, textures, indices);
-	return true;
-}
-/*
-* 获取一个材质中的纹理
-*/
-bool Mesh::processMaterial(const aiMaterial* matPtr, const aiScene* sceneObjPtr,
-	const aiTextureType textureType, std::vector<Texture>& textures)
-{
-	textures.clear();
-
-	if (!matPtr
-		|| !sceneObjPtr)
-	{
-		return false;
-	}
-	if (matPtr->GetTextureCount(textureType) <= 0)
-	{
-		return true;
-	}
-	for (size_t i = 0; i < matPtr->GetTextureCount(textureType); ++i)
-	{
-		Texture text;
-		aiString textPath;
-		aiReturn retStatus = matPtr->GetTexture(textureType, i, &textPath);
-		if (retStatus != aiReturn_SUCCESS
-			|| textPath.length == 0)
-		{
-			std::cerr << "Warning, load texture type=" << textureType
-				<< "index= " << i << " failed with return value= "
-				<< retStatus << std::endl;
-			continue;
-		}
-		//std::string absolutePath = this->modelFileDir + "/" + textPath.C_Str();//comment yqy180503
-		std::string absolutePath =  textPath.C_Str();//add yqy180503
-		LoadedTextMapType::const_iterator it = this->loadedTextureMap.find(absolutePath);
-		if (it == this->loadedTextureMap.end()) // 检查是否已经加载过了
-		{
-			GLuint textId = TextureHelper::load2DTexture(absolutePath.c_str());
-			text.id = textId;
-			text.path = absolutePath;
-			text.type = textureType;
-			textures.push_back(text);
-			loadedTextureMap[absolutePath] = text;
-		}
-		else
-		{
-			textures.push_back(it->second);
-		}
+		this->processNode(node->mChildren[i], sceneObjPtr);
 	}
 	return true;
 }

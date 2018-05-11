@@ -98,18 +98,29 @@ typedef ObjMesh Mesh;
 class Mesh
 {
 public:
-	void Mesh::update_normal(BufModel &model);////add yqy180425
-	//void update_normal();//comment yqy180425
+	//void Mesh::update_normal(BufModel &model);////add yqy180425
+	void update_normal();//comment yqy180425
 	//add yqy180424	
 	bool processNode(const aiNode* node, const aiScene* sceneObjPtr);
-	bool processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr, BufModel& meshObj);
-	bool processMaterial(const aiMaterial* matPtr, const aiScene* sceneObjPtr,
-		const aiTextureType textureType, std::vector<Texture>& textures);
+	
 	bool load_obj(const std::string& filePath);
 	void draw(const Shader& shader) const;
+
+	void CreateDispModel()
+	{
+		for (std::vector<BufModel>::iterator it = this->bufmodels.begin(); this->bufmodels.end() != it; ++it)
+		{
+			it->CreateDispModelbuf();//add yqy180513
+								  //it->setupMesh();//comment yqy180513
+		}
+	}
+
 	//add end yqy180424
-	BufModel _bufmodel;
+	BufModel _bufmodel;//特地为了recons设置
 	std::vector<BufModel> bufmodels; // 保存Mesh
+
+	
+
 	//add yqy180504
 	/*int n_verts_;
 	int n_tri_;*/
@@ -118,8 +129,7 @@ private:
 	
 	
 	std::string modelFileDir; // 保存模型文件的文件夹路径
-	typedef std::map<std::string, Texture> LoadedTextMapType; // key = texture file path
-	LoadedTextMapType loadedTextureMap; // 保存已经加载的纹理
+	
 };
 typedef Mesh ObjMesh;
 //add end yqy180428

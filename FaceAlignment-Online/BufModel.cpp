@@ -182,6 +182,203 @@ BufModel::~BufModel() {
 
 
 
+bool BufModel::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr)
+{
+	if (!meshPtr || !sceneObjPtr)
+	{
+		return false;
+	}
+	//std::vector<Vertex> vertData;
+	std::vector<Texture> textures;
+	std::vector<GLuint> indices;
+
+
+	/*std::vector<double> coords;
+	std::vector<int> tris;*/
+
+	Vertex vertex;
+	// 从Mesh得到顶点数据、法向量、纹理数据
+	//add yqy180426
+	std::cout << " meshPtr->mNumVertices=" << meshPtr->mNumVertices << std::endl;
+	{
+		this->n_tri_ = meshPtr->mNumFaces;
+		std::cout << " it->n_tri_" << this->n_tri_ << std::endl;
+		this->n_verts_ = meshPtr->mNumVertices;
+		std::cout << " it->n_verts_=" << this->n_verts_ << std::endl;
+	}
+	//add yqy180513
+	this->position_ = Eigen::MatrixXf(n_verts_, 3);
+	this->color_ = Eigen::MatrixXf(n_verts_, 3);	 /*this->color_ = this->color_ * 255.f;*/
+	this->normal_ = Eigen::MatrixXf(n_verts_, 3);
+	this->tex_coord_ = Eigen::MatrixXf(n_verts_, 2);
+	//add end180513
+	//add end yqy180426
+	for (size_t i = 0; i < meshPtr->mNumVertices; ++i)
+	{
+
+		//初始化不能加在这里，否则每次都被清空为0了
+		////add yqy180513
+		//this->position_ = Eigen::MatrixXf(n_verts_, 3);	this->position_.setZero();
+		//this->color_ = Eigen::MatrixXf(n_verts_, 3);	this->color_.setOnes(); /*this->color_ = this->color_ * 255.f;*/
+		//this->normal_ = Eigen::MatrixXf(n_verts_, 3); this->normal_.setZero();
+		//this->tex_coord_ = Eigen::MatrixXf(n_verts_, 2);	this->tex_coord_.setZero();
+		////add end180513
+		/*Vertex vertex;*/
+		// 获取顶点位置
+		if (meshPtr->HasPositions())
+		{
+			//add yqy180513
+			this->position_(i, 0) = meshPtr->mVertices[i].x;
+			this->position_(i, 1) = meshPtr->mVertices[i].y;
+			this->position_(i, 2) = meshPtr->mVertices[i].z;
+			/*std::cout << " meshPtr->mVertices[i].x=" << meshPtr->mVertices[i].x << std::endl;
+			std::cout << " this->position_(i,0)=" << this->position_(i, 0) << std::endl;*/
+			//不能像下面这样赋值，会出现“=”作为左操作数的问题，两边数据类型不一致
+			/*this->position_.x = meshPtr->mVertices[i].x;
+			this->position_.y = meshPtr->mVertices[i].y;
+			this->position_.z = meshPtr->mVertices[i].z;*/
+			//add end 180513
+			//comment yqy180512
+			/*vertex.position.x = meshPtr->mVertices[i].x;
+			vertex.position.y = meshPtr->mVertices[i].y;
+			vertex.position.z = meshPtr->mVertices[i].z;*/
+			//comment end
+		}
+		// 获取纹理数据 目前只处理0号纹理
+		if (meshPtr->HasTextureCoords(0))
+		{
+			//modify yqy180512
+			this->tex_coord_(i, 0) = meshPtr->mTextureCoords[0][i].x;
+			this->tex_coord_(i, 1) = meshPtr->mTextureCoords[0][i].y;
+			//modify end
+			//comment yqy180512
+			/*vertex.texCoords.x = meshPtr->mTextureCoords[0][i].x;
+			vertex.texCoords.y = meshPtr->mTextureCoords[0][i].y;*/
+			//comment end
+		}
+		//comment yqy180512
+		/*else
+		{
+		vertex.texCoords = glm::vec2(0.0f, 0.0f);
+		}*/
+		//comment end
+		// 获取法向量数据
+		if (meshPtr->HasNormals())
+		{
+			//modify yqy180512
+			this->normal_(i, 0) = meshPtr->mNormals[i].x;
+			this->normal_(i, 1) = meshPtr->mNormals[i].y;
+			this->normal_(i, 2) = meshPtr->mNormals[i].z;
+			//modify end
+			//comment yqy180512
+			/*vertex.normal.x = meshPtr->mNormals[i].x;
+			vertex.normal.y = meshPtr->mNormals[i].y;
+			vertex.normal.z = meshPtr->mNormals[i].z;*/
+			//comment end
+		}
+		//vertData.push_back(vertex);//comment yqy180512
+	}
+	// 获取索引数据
+	for (size_t i = 0; i < meshPtr->mNumFaces; ++i)
+	{
+		aiFace face = meshPtr->mFaces[i];
+		if (face.mNumIndices != 3)
+		{
+			std::cerr << "Error:Model::processMesh, mesh not transformed to triangle mesh." << std::endl;
+			return false;
+		}
+		for (size_t j = 0; j < face.mNumIndices; ++j)
+		{
+			indices.push_back(face.mIndices[j]);
+		}
+	}
+
+	////add yqy180426
+	//std::cout << " meshPtr->mNumFaces=" << meshPtr->mNumFaces << std::endl;
+	//for (std::vector<BufModel>::iterator it = this->bufmodels.begin(); this->bufmodels.end() != it; ++it)
+	//{
+
+	//	it->n_tri_ = meshPtr->mNumFaces;
+	//	std::cout << " it->n_tri_" << it->n_tri_ << std::endl;
+	//}
+	////add end yqy180426
+
+
+	//for (std::vector<BufModel>::iterator it = this->bufmodels.begin(); this->bufmodels.end() != it; ++it)
+	//{			
+	//	
+	//	it->n_verts_ = meshPtr->mNumVertices;
+	//	std::cout << " it->n_verts_=" << it->n_verts_ << std::endl;
+	//}
+	// 获取纹理数据
+	if (meshPtr->mMaterialIndex >= 0)
+	{
+		const aiMaterial* materialPtr = sceneObjPtr->mMaterials[meshPtr->mMaterialIndex];
+		// 获取diffuse类型
+		std::vector<Texture> diffuseTexture;
+		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_DIFFUSE, diffuseTexture);
+		textures.insert(textures.end(), diffuseTexture.begin(), diffuseTexture.end());
+		// 获取specular类型
+		std::vector<Texture> specularTexture;
+		this->processMaterial(materialPtr, sceneObjPtr, aiTextureType_SPECULAR, specularTexture);
+		textures.insert(textures.end(), specularTexture.begin(), specularTexture.end());
+	}
+	//meshObj.setData(vertData, textures, indices);
+	this->setData(textures, indices);//modifyyqy180513
+									 //this->setData(vertData, textures, indices);//comment yqy180513
+
+	return true;
+}
+/*
+* 获取一个材质中的纹理
+*/
+bool BufModel::processMaterial(const aiMaterial* matPtr, const aiScene* sceneObjPtr,
+	const aiTextureType textureType, std::vector<Texture>& textures)
+{
+	textures.clear();
+
+	if (!matPtr
+		|| !sceneObjPtr)
+	{
+		return false;
+	}
+	if (matPtr->GetTextureCount(textureType) <= 0)
+	{
+		return true;
+	}
+	for (size_t i = 0; i < matPtr->GetTextureCount(textureType); ++i)
+	{
+		Texture text;
+		aiString textPath;
+		aiReturn retStatus = matPtr->GetTexture(textureType, i, &textPath);
+		if (retStatus != aiReturn_SUCCESS
+			|| textPath.length == 0)
+		{
+			std::cerr << "Warning, load texture type=" << textureType
+				<< "index= " << i << " failed with return value= "
+				<< retStatus << std::endl;
+			continue;
+		}
+		//std::string absolutePath = this->modelFileDir + "/" + textPath.C_Str();//comment yqy180503
+		std::string absolutePath = textPath.C_Str();//add yqy180503
+		LoadedTextMapType::const_iterator it = this->loadedTextureMap.find(absolutePath);
+		if (it == this->loadedTextureMap.end()) // 检查是否已经加载过了
+		{
+			GLuint textId = TextureHelper::load2DTexture(absolutePath.c_str());
+			text.id = textId;
+			text.path = absolutePath;
+			text.type = textureType;
+			textures.push_back(text);
+			loadedTextureMap[absolutePath] = text;
+		}
+		else
+		{
+			textures.push_back(it->second);
+		}
+	}
+	return true;
+}
+
 
 #if 0
 //commnent yqy180424
@@ -272,8 +469,70 @@ void BufModel::CreateDispModel(Mesh& model, bool isStatic)
 
 //  创建用于模型显示的GL相关内存
 //CreateDispModel：创建和设置显示模型的VAO, VBO, IBO
-void BufModel::CreateDispModel()  // 建立VAO,VBO等缓冲区
+//modify yqy180513
+void BufModel::CreateDispModelbuf()  // 建立VAO,VBO等缓冲区
 {
+	/*OpenGL定义了几个glGen*前缀的函数来产生不同类型的对象。它们通常有两个参数：第一个参
+	数用来定义你想创建的对象的数量，第二个参数是一个GLuint变量的数组的地址，来存储分配
+	给你的引用变量handles（要确保这个数组足够大来处理你的请求！）。以后对这个函数的调
+	用将不会重复产生相同的handle对象，除非你先使用glDeleteBuffers删除他们。*/
+	std::vector<Vertex> vertices;
+	std::vector<unsigned int> indices2;
+	int nVerts = this->n_verts_;//顶点数
+	int nTri = this->n_tri_;//面数 
+	std::cout << "position_(0,0)=" << position_(0, 0) << std::endl;
+	for (size_t kk = 0; kk < nVerts; ++kk)
+	{
+		vertices.push_back(Vertex(glm::vec3(position_(kk, 0), // verts
+			position_(kk, 1),
+			position_(kk, 2)),
+			glm::vec2(tex_coord_(kk, 0), // tex coord
+				tex_coord_(kk, 1)),
+			glm::vec3(normal_(kk, 0),  // normal
+				normal_(kk, 1),
+				normal_(kk, 2))));
+	}
+	indices2 = indices;
+	std::cout << "yqy nTri=" << this->n_tri_ << std::endl;
+	std::cout << "yqy indices.size=" << indices.size() << std::endl;
+	glGenVertexArrays(1, &this->VAOId);
+
+	glGenBuffers(1, &this->VBOId);
+	glGenBuffers(1, &this->EBOId);
+
+	glBindVertexArray(this->VAOId);//绑定VAO
+								   //绑定操作通过glBindBuffer来实现，第一个参数指定绑定的数据类型，可以是GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, GL_PIXEL_PACK_BUFFER或者GL_PIXEL_UNPACK_BUFFER中的一个。
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBOId);//绑定VBO
+											   //调用glBufferData把用户定义的数据传输到当前绑定的显存缓冲区中。
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(),
+		&vertices[0], GL_STATIC_DRAW);
+	//std::cout << "vertices[0].position.x=" << vertices[0].position.x << std::endl;
+	// 顶点位置属性
+	//顶点数据传入GPU之后，还需要通知OpenGL如何解释这些顶点数据，这个工作由函数glVertexAttribPointer完成
+	/** 第一个参数指定顶点属性位置，与顶点着色器中layout(location = 0)对应。
+	* 第二个参数指定顶点属性大小。
+	* 第三个参数指定数据类型。
+	* 第四个参数定义是否希望数据被标准化。
+	* 第五个参数是步长（Stride），指定在连续的顶点属性之间的间隔。
+	* 第六个参数表示我们的位置数据在缓冲区起始位置的偏移量。*/
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	// 顶点纹理坐标
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)(3 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(1);
+	// 顶点法向量属性
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
+		sizeof(Vertex), (GLvoid*)(5 * sizeof(GL_FLOAT)));
+	glEnableVertexAttribArray(2);
+	// 索引数据
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBOId);//绑定EBO
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)* this->indices.size(),
+		&this->indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);//解除VBO绑定
+	glBindVertexArray(0);//解除VAO绑定
+#if 0
 	glGenVertexArrays(1, &this->VAOId);
 	glGenBuffers(1, &this->VBOId);
 	glGenBuffers(1, &this->EBOId);
@@ -300,8 +559,10 @@ void BufModel::CreateDispModel()  // 建立VAO,VBO等缓冲区
 		&this->indices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-}
+#endif
 
+}
+//modify end180513
 
 
 //add endyqy180425
@@ -434,10 +695,26 @@ void BufModel::UpdateDispModel()
 	//std::vector<unsigned int> indices2;
 	int nVerts = this->n_verts_;
 	int nTri = this->n_tri_;
-	for (size_t kk = 0; kk < nVerts; ++kk)
+	//modify yqy180513
+	for (size_t kk = 0; kk < nVerts; kk++)
 	{
-		vertices.push_back(Vertex(this->vertData[kk].position, this->vertData[kk].texCoords, this->vertData[kk].normal));
+		vertices.push_back(Vertex(glm::vec3(position_(kk, 0), // verts
+			position_(kk, 1),
+			position_(kk, 2)),
+			glm::vec4(color_(kk, 0) / 255.f,	// colors
+				color_(kk, 1) / 255.f,
+				color_(kk, 2) / 255.f, 1.f),
+			glm::vec2(tex_coord_(kk, 0), // tex coord
+				tex_coord_(kk, 1)),
+			glm::vec3(normal_(kk, 0),  // normal
+				normal_(kk, 1),
+				normal_(kk, 2))));
 	}
+	//modify end180513
+	//for (size_t kk = 0; kk < nVerts; ++kk)
+	//{
+	//	vertices.push_back(Vertex(this->vertData[kk].position, this->vertData[kk].texCoords, this->vertData[kk].normal));
+	//}
 	//for (int kk = 0; kk < nTri; ++kk)
 	//{
 	//	indices2.push_back(this->indices[kk]);

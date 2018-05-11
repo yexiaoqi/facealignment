@@ -81,7 +81,8 @@ public:
 
 	glm::mat4 model_mat_, camera_view_, projection_;
 	Eigen::MatrixXf landmark3DPos_;
-	Mesh recon_mesh_;
+	//BufModel recon_mesh_;//add yqy180511
+	Mesh recon_mesh_;//comment yqy180511
 	// Parameters
 	ModelParametersBs recon_model_;
 	ModelParametersBs recon_modelLast_;
