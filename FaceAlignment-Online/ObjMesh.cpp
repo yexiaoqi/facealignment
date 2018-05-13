@@ -53,6 +53,7 @@ void Mesh::update_normal()
 			double area = n.norm();
 			omp_set_lock(&writelock);
 			//注意由于n是eigen：vector3f型，不能直接it->vertData[vidx0].normal +=n
+
 			it->vertData[vidx0].normal += glm::vec3(n(vidx0,0), n(vidx0, 1), n(vidx0, 2));
 			it->vertData[vidx1].normal += glm::vec3(n(vidx1, 0), n(vidx1, 1), n(vidx1, 2));
 			it->vertData[vidx2].normal += glm::vec3(n(vidx2, 0), n(vidx2, 1), n(vidx2, 2));
