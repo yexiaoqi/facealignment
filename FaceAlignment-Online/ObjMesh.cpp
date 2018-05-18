@@ -10,8 +10,60 @@
 
 
 
+void Mesh::update_normal()
+{
+	for (std::vector<BufModel>::iterator it = this->bufmodels.begin(); this->bufmodels.end() != it; ++it)
+	{
+		it->normal_.resize(it->n_verts_, 3);
+		it->face_normal_.resize(it->n_tri_, 3);
+		it->normal_.setZero();
+		it->face_normal_.setZero();
+		std::vector<float> area_sum(it->n_verts_, 0.f);
+		omp_lock_t writelock;
+		omp_init_lock(&writelock);
+
+#pragma omp parallel for
+		//原理请看【一步步学OpenGL 18】 -《漫射光》 - Mr_厚厚的博客 - CSDN博客中CalcNormals函数部分
+		for (int i = 0; i < (it->n_tri_); ++i) {
+			auto vidx0 = it->tri_list_(i, 0);
+			auto vidx1 = it->tri_list_(i, 1);
+			auto vidx2 = it->tri_list_(i, 2);
+
+			auto v0 = Eigen::Vector3f(it->position_.row(vidx0));
+			auto v1 = Eigen::Vector3f(it->position_.row(vidx1));
+			auto v2 = Eigen::Vector3f(it->position_.row(vidx2));
+
+			auto v0v1 = v1 - v0;
+			auto v0v2 = v2 - v0;
+			auto n = v0v2.cross(v0v1);
+			double area = n.norm();
+			//对于每个三角形法向量都是通过计算从第一个顶点出发到其他两个顶点的两条边向量的差积得到的。在向量累加之前要求先将其单位化，因为差积运算后的
+			//结果不一定是单位向量。
+			omp_set_lock(&writelock);
+			//累加计算三角形每个顶点的法向量
+			it->normal_.row(vidx0) += n;
+			it->normal_.row(vidx1) += n;
+			it->normal_.row(vidx2) += n;
+			area_sum[vidx0] += area;
+			area_sum[vidx1] += area;
+			area_sum[vidx2] += area;
+			omp_unset_lock(&writelock);
+			n.normalize();
+			it->face_normal_.row(i) = n;//面法线
+		}
+		omp_destroy_lock(&writelock);
+
+#pragma omp parallel for
+		for (int i = 0; i < (it->n_verts_); ++i)
+		{
+			it->normal_.row(i) /= area_sum[i];
+		}
+
+	}
+}
 
 
+#if 0
 //modify yqy180504
 //更新面法线和顶点法线 
 void Mesh::update_normal()
@@ -121,6 +173,10 @@ void Mesh::update_normal()
 //		}
 	}
 }
+#endif
+
+
+
 #if 0
 //comment yqy180425
 void update_normal()

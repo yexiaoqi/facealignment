@@ -481,7 +481,8 @@ public:
 		request_tex_coord_ = false;//add yqyq180425
 		//template_sphere_.request_tex_coord_ = false;//comment yqy180424
 		//template_sphere_.load_obj("data/sphere.obj"); //comment yqy180424
-		this->CreateDispModel();//add yqyq180425
+		this->CreateDispModelbuf();//add yqyq180518
+		//this->CreateDispModel();//add yqyq180425  comment yqy180518
 		//this->CreateDispModel(false);//add yqyq180425
 		//this->CreateDispModel(template_sphere_, false); //comment yqy180425
 		this->nTri_ = n_tri_;//add yqyq180425
