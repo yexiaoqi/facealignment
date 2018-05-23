@@ -223,6 +223,18 @@ void ReshapeCallback(int w, int h)
 //////////////////////////////// My Function ////////////////////////////////
 int main(int argc, char *argv[]) 
 {
+	//add yqy180523
+	// Init OpenGL   初始化OpenGL
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitWindowPosition(0, 0);
+	glutInitWindowSize(gWinWidth, gWinHeight);
+	glutCreateWindow("3D Face Fitting");
+	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+	glewInit();
+	//add end 180523
+
+
 
 	// Parse Args
 	mParser.Parse(argc, argv);//解析参数  调用Parse(int argc, char* argv[])	这里选择输入文件为default.conf	
@@ -306,14 +318,16 @@ int main(int argc, char *argv[])
 	//	mVideoRes.LoadBsCoeff(m_bsCoefs, nFrame, false);
 	//}
 
-	// Init OpenGL   初始化OpenGL
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutInitWindowPosition(0, 0);
-	glutInitWindowSize(gWinWidth, gWinHeight);
-	glutCreateWindow("3D Face Fitting");
-	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-	glewInit();
+	//comment yqy180523
+	//// Init OpenGL   初始化OpenGL
+	//glutInit(&argc, argv);
+	//glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	//glutInitWindowPosition(0, 0);
+	//glutInitWindowSize(gWinWidth, gWinHeight);
+	//glutCreateWindow("3D Face Fitting");
+	//glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+	//glewInit();
+	//comment end 180523
 	glGenTextures(1, &textureIds); // left  产生指定数量的纹理对象(1个），并将他们的引用句柄放到GLuint数组指针（第二个参数）中
 	glGenTextures(1, &textureIdsFace); // right
 

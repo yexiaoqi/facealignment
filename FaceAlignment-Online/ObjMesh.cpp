@@ -25,9 +25,19 @@ void Mesh::update_normal()
 #pragma omp parallel for
 		//原理请看【一步步学OpenGL 18】 -《漫射光》 - Mr_厚厚的博客 - CSDN博客中CalcNormals函数部分
 		for (int i = 0; i < (it->n_tri_); ++i) {
-			auto vidx0 = it->tri_list_(i, 0);
+
+
+			//add yqy180523
+			auto vidx0 = it->tri_list[i].mIndices[0];//第i个三角形的第一个顶点vidx0
+			auto vidx1 = it->tri_list[i].mIndices[1]; //第i个三角形的第2个顶点
+			auto vidx2 = it->tri_list[i].mIndices[2]; // 第i个三角形的第3个顶点
+			//add end180523
+
+			//commment yqy180523
+			/*auto vidx0 = it->tri_list_(i, 0);
 			auto vidx1 = it->tri_list_(i, 1);
-			auto vidx2 = it->tri_list_(i, 2);
+			auto vidx2 = it->tri_list_(i, 2);*/
+			//commment end180523
 
 			auto v0 = Eigen::Vector3f(it->position_.row(vidx0));
 			auto v1 = Eigen::Vector3f(it->position_.row(vidx1));
@@ -281,7 +291,7 @@ bool Mesh::processNode(const aiNode* node, const aiScene* sceneObjPtr)
 		return false;
 	}
 	// 先处理自身结点
-	std::cout << "node->mNumMeshes=" << node->mNumMeshes << std::endl;
+	//std::cout << "node->mNumMeshes=" << node->mNumMeshes << std::endl;//由于输出太多，注释掉comment yqy 80523
 	for (size_t i = 0; i < node->mNumMeshes; ++i)
 	{
 		// 注意node中的mesh是对sceneObject中mesh的索引

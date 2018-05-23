@@ -199,12 +199,12 @@ bool BufModel::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr)
 	Vertex vertex;
 	// 从Mesh得到顶点数据、法向量、纹理数据
 	//add yqy180426
-	std::cout << " meshPtr->mNumVertices=" << meshPtr->mNumVertices << std::endl;
+	//std::cout << " meshPtr->mNumVertices=" << meshPtr->mNumVertices << std::endl;//由于输出太多，注释掉comment yqy 80523
 	{
 		this->n_tri_ = meshPtr->mNumFaces;
-		std::cout << " it->n_tri_" << this->n_tri_ << std::endl;
+		//std::cout << " it->n_tri_" << this->n_tri_ << std::endl;//由于输出太多，注释掉comment yqy 80523
 		this->n_verts_ = meshPtr->mNumVertices;
-		std::cout << " it->n_verts_=" << this->n_verts_ << std::endl;
+		//std::cout << " it->n_verts_=" << this->n_verts_ << std::endl;//由于输出太多，注释掉comment yqy 80523
 	}
 	//add yqy180513
 	this->position_ = Eigen::MatrixXf(n_verts_, 3);
@@ -282,6 +282,7 @@ bool BufModel::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr)
 	for (size_t i = 0; i < meshPtr->mNumFaces; ++i)
 	{
 		aiFace face = meshPtr->mFaces[i];
+		tri_list.push_back(face);//add yqy180523
 		if (face.mNumIndices != 3)
 		{
 			std::cerr << "Error:Model::processMesh, mesh not transformed to triangle mesh." << std::endl;
@@ -480,7 +481,7 @@ void BufModel::CreateDispModelbuf()  // 建立VAO,VBO等缓冲区
 	std::vector<unsigned int> indices2;
 	int nVerts = this->n_verts_;//顶点数
 	int nTri = this->n_tri_;//面数 
-	std::cout << "position_(0,0)=" << position_(0, 0) << std::endl;
+	//std::cout << "position_(0,0)=" << position_(0, 0) << std::endl;//由于输出太多，注释掉comment yqy 80523
 	for (size_t kk = 0; kk < nVerts; ++kk)
 	{
 		vertices.push_back(Vertex(glm::vec3(position_(kk, 0), // verts
@@ -493,8 +494,8 @@ void BufModel::CreateDispModelbuf()  // 建立VAO,VBO等缓冲区
 				normal_(kk, 2))));
 	}
 	indices2 = indices;
-	std::cout << "yqy nTri=" << this->n_tri_ << std::endl;
-	std::cout << "yqy indices.size=" << indices.size() << std::endl;
+	//std::cout << "yqy nTri=" << this->n_tri_ << std::endl;//由于输出太多，注释掉comment yqy 80523
+	//std::cout << "yqy indices.size=" << indices.size() << std::endl;//由于输出太多，注释掉comment yqy 80523
 	glGenVertexArrays(1, &this->VAOId);
 
 	glGenBuffers(1, &this->VBOId);

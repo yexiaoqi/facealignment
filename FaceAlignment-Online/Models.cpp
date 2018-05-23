@@ -11,9 +11,19 @@ void Blendshape::LoadBs(std::string bs_folder, int nBs)
 	std::string bs_file;
 	char filename[512];
 	//1. load neutral first
-	sprintf_s(filename, "%s/neutral.obj", bs_folder.c_str());
+
+	//add yqy180523
+	/*std::ifstream modelPath("modelPath.txt");
+	std::string modelFilePath;
+	std::getline(modelPath, modelFilePath);*/
+	//add end 180523
+	//不知为何，使用	sprintf_s(filename, "%s/neutral.obj", bs_folder.c_str());会导致导入材质纹理时模型路径也变成了材质路径,解决SOIL_free_image_data(imageData);异常中断后这个问题也消失了
+	sprintf_s(filename, "%s/neutral.obj", bs_folder.c_str());//comment yqy180523
 	//obj_bufmodel.load_obj(filename);//add yqy180424
-	obj_mesh.load_obj(filename);//comment yqy180424
+
+	//obj_mesh.load_obj(modelFilePath);//add yqy180523
+	obj_mesh.load_obj(filename);//comment yqy180523
+
 	//obj_mesh.center_model();//jisy center model 170109
 	//obj_mesh.normalize_model();
 	obj_mesh.update_normal();//xiugai yqy 180511
