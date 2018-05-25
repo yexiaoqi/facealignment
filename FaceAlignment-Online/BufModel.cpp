@@ -181,8 +181,8 @@ BufModel::~BufModel() {
 #endif
 
 
-
-bool BufModel::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr)
+//bool BufModel::processMesh( aiMesh* meshPtr, const aiScene* sceneObjPtr)//modify yqy180524
+bool BufModel::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr) //commment yqy180524
 {
 	if (!meshPtr || !sceneObjPtr)
 	{
@@ -213,8 +213,16 @@ bool BufModel::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr)
 	this->tex_coord_ = Eigen::MatrixXf(n_verts_, 2);
 	//add end180513
 	//add end yqy180426
+	//int mNumfaces = 0;//add yqy180524
 	for (size_t i = 0; i < meshPtr->mNumVertices; ++i)
 	{
+		////add yqy180524
+		//if (i % 3 == 0)
+		//{
+		//	++mNumfaces;
+		//	tri_list.push_back(meshPtr);
+		//}
+		////add end 180524
 
 		//初始化不能加在这里，否则每次都被清空为0了
 		////add yqy180513
@@ -282,7 +290,7 @@ bool BufModel::processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr)
 	for (size_t i = 0; i < meshPtr->mNumFaces; ++i)
 	{
 		aiFace face = meshPtr->mFaces[i];
-		tri_list.push_back(face);//add yqy180523
+		tri_list.push_back(face);//add yqy180523 //comment yqy180524
 		if (face.mNumIndices != 3)
 		{
 			std::cerr << "Error:Model::processMesh, mesh not transformed to triangle mesh." << std::endl;

@@ -766,11 +766,18 @@ void SingleImageReconstructor::Init()
 	this->pts3D_.resize(this->index3D_.size());
 	for (int ii = 0; ii < this->index3D_.size(); ii++) 
 	{
-		//add yqy180425
-		this->pts3D_[ii](0) = (double)this->bsData_.blendshapes_[0]._bufmodel.position_(index3D_[ii], 0);
-		this->pts3D_[ii](1) = (double)this->bsData_.blendshapes_[0]._bufmodel.position_(index3D_[ii], 1);
-		this->pts3D_[ii](2) = (double)this->bsData_.blendshapes_[0]._bufmodel.position_(index3D_[ii], 2);
-		//add end yqy180425
+		//add yqy180525
+		this->pts3D_[ii](0) = (double)this->bsData_.blendshapes_[0].mesh_position_(index3D_[ii], 0);
+		this->pts3D_[ii](1) = (double)this->bsData_.blendshapes_[0].mesh_position_(index3D_[ii], 1);
+		this->pts3D_[ii](2) = (double)this->bsData_.blendshapes_[0].mesh_position_(index3D_[ii], 2);
+		//add end yqy180525
+
+		////add yqy180425  comment yqy180525
+		//this->pts3D_[ii](0) = (double)this->bsData_.blendshapes_[0]._bufmodel.position_(index3D_[ii], 0);
+		//this->pts3D_[ii](1) = (double)this->bsData_.blendshapes_[0]._bufmodel.position_(index3D_[ii], 1);
+		//this->pts3D_[ii](2) = (double)this->bsData_.blendshapes_[0]._bufmodel.position_(index3D_[ii], 2);
+		////add end yqy180425  comment end 180525
+
 		//comment yqy180425
 		/*this->pts3D_[ii](0) = (double)this->bsData_.blendshapes_[0].position_(index3D_[ii], 0);
 		this->pts3D_[ii](1) = (double)this->bsData_.blendshapes_[0].position_(index3D_[ii], 1);
@@ -1075,9 +1082,18 @@ void SingleImageReconstructor::UpdateLandmarkPos()
 	landmark3DPos_ = Eigen::MatrixXf(numPts_, 3);
 	for (int kk = 0; kk < numPts_; kk++)
 	{
-		landmark3DPos_(kk, 0) = recon_mesh_._bufmodel.position_(index3D_[kk], 0);// 从data / jisy - 20161215 / 68markers.txt加载index3D_
-		landmark3DPos_(kk, 1) = recon_mesh_._bufmodel.position_(index3D_[kk], 1);
-		landmark3DPos_(kk, 2) = recon_mesh_._bufmodel.position_(index3D_[kk], 2);
+		//add yqy180525
+		landmark3DPos_(kk, 0) = recon_mesh_.mesh_position_(index3D_[kk], 0);// 从data / jisy - 20161215 / 68markers.txt加载index3D_
+		landmark3DPos_(kk, 1) = recon_mesh_.mesh_position_(index3D_[kk], 1);
+		landmark3DPos_(kk, 2) = recon_mesh_.mesh_position_(index3D_[kk], 2);
+		//add end 180525
+
+		//comment yqy180525
+		//landmark3DPos_(kk, 0) = recon_mesh_._bufmodel.position_(index3D_[kk], 0);// 从data / jisy - 20161215 / 68markers.txt加载index3D_
+		//landmark3DPos_(kk, 1) = recon_mesh_._bufmodel.position_(index3D_[kk], 1);
+		//landmark3DPos_(kk, 2) = recon_mesh_._bufmodel.position_(index3D_[kk], 2);
+		//comment end 180525
+
 		//comment yqy180425
 		//landmark3DPos_(kk, 0) = recon_mesh_.position_(index3D_[kk], 0);// 从data / jisy - 20161215 / 68markers.txt加载index3D_
 		//landmark3DPos_(kk, 1) = recon_mesh_.position_(index3D_[kk], 1);

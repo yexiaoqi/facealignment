@@ -453,13 +453,15 @@ public:
 	//std::vector<Vertex> vertData;
 	std::vector<GLuint> indices;//面的索引而不是顶点的索引
 	std::vector<Texture> textures;
-	std::vector<aiFace> tri_list;//add yqy180511
+	std::vector<aiFace> tri_list;//add yqy180511 //comment yqy180524
+	//std::vector<aiMesh*> tri_list;//add yqy180524
 	std::vector<Eigen::Vector3f> face_normal;//add yqy180511
 	GLuint VAOId, VBOId, EBOId;
 	void CreateDispModelbuf();//assimp里的setupmesh
 	//add end yqy180425
 
-	bool processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr);
+	//bool processMesh(aiMesh* meshPtr, const aiScene* sceneObjPtr);//modify yqy 180524
+	bool processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr);//comment yqy180524
 	bool processMaterial(const aiMaterial* matPtr, const aiScene* sceneObjPtr,
 		const aiTextureType textureType, std::vector<Texture>& textures);
 	typedef std::map<std::string, Texture> LoadedTextMapType; // key = texture file path

@@ -173,25 +173,58 @@ void Blendshape::ProjectLandmark(std::vector<int> index3D)
 //通过传入一组系数来更新blendshape
 void Blendshape::UpdateMesh(std::vector<double> coef, Mesh& recons) ////coef即params_
 {
+
+
 	float coef_f;
-	//for (std::vector<BufModel>::iterator it2 = recons.bufmodels.begin(); recons.bufmodels.end() != it2; ++it2)
+	recons.mesh_position_.setZero();
+	recons.mesh_position_.array() = this->blendshapes_[0].mesh_position_.array() * coef[0];
+	for (int kk = 1; kk < coef.size(); kk++)
 	{
-		for (std::vector<BufModel>::iterator it = blendshapes_[0].bufmodels.begin(); blendshapes_[0].bufmodels.end() != it; ++it)
-		{
-		
-			recons._bufmodel.position_.setZero();
-			recons._bufmodel.position_.array() = it->position_.array() * coef[0];
-		}
-		for (int kk = 1; kk < coef.size(); kk++)
-		{
-			for (std::vector<BufModel>::iterator it = blendshapes_[kk].bufmodels.begin(); blendshapes_[kk].bufmodels.end() != it; ++it)
-			{
-				coef_f = coef[kk];
-				recons._bufmodel.position_.array() += (it->position_.array() - it->position_.array()) * coef_f;
-			}
-		}
+		coef_f = coef[kk];
+		recons.mesh_position_.array() += (this->blendshapes_[kk].mesh_position_.array() - this->blendshapes_[0].mesh_position_.array()) * coef_f;
 	}
 	return;
+
+
+	////comment yqy180525
+	//float coef_f;
+	////add yqy180524
+	//for (std::vector<BufModel>::iterator it = blendshapes_[0].bufmodels.begin(),int ii=0; blendshapes_[0].bufmodels.end() != it; ++it,++ii)
+	//{
+	//	recons.bufmodels[ii].position_.setZero();
+	//	recons.bufmodels[ii].position_.array()= it->position_.array() * coef[0];
+	//}
+	//for (int kk = 1; kk < coef.size(); kk++)
+	//{
+	//	for (std::vector<BufModel>::iterator it = blendshapes_[kk].bufmodels.begin(),int jj=0; blendshapes_[kk].bufmodels.end() != it; ++it,++jj)
+	//	{
+	//		coef_f = coef[kk];
+	//		recons.bufmodels[jj].position_.array() += (it->position_.array() - it->position_.array()) * coef_f;
+	//	}
+	//}
+	////add end 180524
+
+	////commment yqy180524
+	////for (std::vector<BufModel>::iterator it2 = recons.bufmodels.begin(); recons.bufmodels.end() != it2; ++it2)
+	///*{
+	//	for (std::vector<BufModel>::iterator it = blendshapes_[0].bufmodels.begin(); blendshapes_[0].bufmodels.end() != it; ++it)
+	//	{
+	//	    
+	//		recons._bufmodel.position_.setZero();
+	//		recons._bufmodel.position_.array() = it->position_.array() * coef[0];
+	//	}
+	//	for (int kk = 1; kk < coef.size(); kk++)
+	//	{
+	//		for (std::vector<BufModel>::iterator it = blendshapes_[kk].bufmodels.begin(); blendshapes_[kk].bufmodels.end() != it; ++it)
+	//		{
+	//			coef_f = coef[kk];
+	//			recons._bufmodel.position_.array() += (it->position_.array() - it->position_.array()) * coef_f;
+	//		}
+	//	}
+	//}*/
+	////commment end 180524
+	//return;
+	////comment end 180525
 }
 
 //传入的是landmarker对应的模型顶点的index，然后将blendshape中每个模型的对应landmarker点坐标值保存在

@@ -98,6 +98,24 @@ typedef ObjMesh Mesh;
 class Mesh
 {
 public:
+
+
+
+	//add yqy180525
+	int mNumMeshes;
+	// vertices - position & color & normal & tex coordinate
+	Eigen::MatrixXf mesh_position_;
+	Eigen::MatrixXf mesh_color_;
+	Eigen::MatrixXf mesh_normal_;
+	Eigen::MatrixXf mesh_tex_coord_;
+	// triangle - face normal & triangle list
+	Eigen::MatrixXf mesh_face_normal_;
+	Eigen::MatrixXi mesh_tri_list_;
+	int mesh_n_verts_;
+	int mesh_n_tri_;
+	//add end180525
+
+
 	//void Mesh::update_normal(BufModel &model);////add yqy180425
 	void update_normal();//comment yqy180425
 	//add yqy180424	
@@ -116,7 +134,7 @@ public:
 	}
 
 	//add end yqy180424
-	BufModel _bufmodel;//特地为了recons设置
+	//BufModel _bufmodel;//特地为了recons设置 //comment yqy180524
 	std::vector<BufModel> bufmodels; // 保存Mesh
 
 	

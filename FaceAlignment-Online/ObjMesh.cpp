@@ -253,12 +253,18 @@ void Mesh::draw(const Shader& shader) const
 }
 bool Mesh::load_obj(const std::string& filePath)
 {
+	//add yqy180525
+	mesh_n_tri_ = 0;
+	mesh_n_verts_ = 0;
+	//end yqy180525
 	Assimp::Importer importer;
 	if (filePath.empty())
 	{
 		std::cerr << "Error:Model::loadModel, empty model file path." << std::endl;
 		return false;
 	}
+
+	printf("Loading OBJ file %s...\n", filePath.c_str());//add yqy180523
 	const aiScene* sceneObjPtr = importer.ReadFile(filePath,
 		aiProcess_Triangulate | aiProcess_FlipUVs);
 //ReadFile函数中第二个参数就是后处理选项，它是一个枚举类型aiPostProcessSteps，可以使用位或操作包含多个选项，例如
@@ -278,6 +284,44 @@ bool Mesh::load_obj(const std::string& filePath)
 		std::cerr << "Error:Model::loadModel, process node failed." << std::endl;
 		return false;
 	}
+	//add yqy180525
+	std::cout << "this->mesh_n_tri_=" << this->mesh_n_tri_ << std::endl;
+	//std::cout << "this->bufmodels[i].position_(j, 0)=" << this->bufmodels[0].position_(0, 0) << std::endl;
+	//将多个bufmodel里的postion串成一个mesh里的positon
+	this->mesh_position_ = Eigen::MatrixXf(this->mesh_n_tri_ * 3, 3);//mesh_n_tri_个面，mesh_n_tri_*3个点，每个点三个坐标，mesh_n_tri_*9个数据
+	this->mesh_color_ = Eigen::MatrixXf(this->mesh_n_tri_ * 3, 3);	 /*this->color_ = this->color_ * 255.f;*/
+	this->mesh_normal_ = Eigen::MatrixXf(this->mesh_n_tri_ * 3, 3);
+	this->mesh_tex_coord_ = Eigen::MatrixXf(this->mesh_n_tri_ * 3, 2);
+	//std::cout << "first:mesh_position_=" << mesh_position_.rows() << std::endl;
+	int count = 0;
+	//std::cout << "count  == 0" << this->mNumMeshes << std::endl;
+	for (size_t i = 0; i < this->mNumMeshes; ++i)
+	{
+
+		if ((i - 1) >= 0)
+		{
+			count += this->bufmodels[i - 1].n_tri_;
+		}
+		/*for (int k = 0; k < i; ++k)
+		{
+		count += this->bufmodels[k].n_tri_;
+		}*/
+
+		for (size_t j = 0; j < this->bufmodels[i].n_tri_; ++j)
+		{
+			this->mesh_position_(count + j, 0) = this->bufmodels[i].position_(j, 0);
+			this->mesh_position_(count + j, 1) = this->bufmodels[i].position_(j, 1);
+			this->mesh_position_(count + j, 2) = this->bufmodels[i].position_(j, 2);
+			this->mesh_tex_coord_(count + j, 0) = this->bufmodels[i].tex_coord_(j, 0);
+			this->mesh_tex_coord_(count + j, 1) = this->bufmodels[i].tex_coord_(j, 1);
+			this->mesh_normal_(count + j, 0) = this->bufmodels[i].normal_(j, 0);
+			this->mesh_normal_(count + j, 1) = this->bufmodels[i].normal_(j, 1);
+			this->mesh_normal_(count + j, 2) = this->bufmodels[i].normal_(j, 2);
+		}
+	}
+	//std::cout << " mesh_position_.rows()=" << mesh_position_.rows() << std::endl;
+	std::cout << " mesh_position_(0,0)=" << this->mesh_position_(0, 0) << std::endl;
+	//add end 180525
 	return true;
 }
 /*
@@ -292,6 +336,8 @@ bool Mesh::processNode(const aiNode* node, const aiScene* sceneObjPtr)
 	}
 	// 先处理自身结点
 	//std::cout << "node->mNumMeshes=" << node->mNumMeshes << std::endl;//由于输出太多，注释掉comment yqy 80523
+	this->mNumMeshes = node->mNumMeshes;
+	//std::cout << "this->mNumMeshes=" << this->mNumMeshes << std::endl;
 	for (size_t i = 0; i < node->mNumMeshes; ++i)
 	{
 		// 注意node中的mesh是对sceneObject中mesh的索引
@@ -302,6 +348,8 @@ bool Mesh::processNode(const aiNode* node, const aiScene* sceneObjPtr)
 			if (meshObj.processMesh(meshPtr, sceneObjPtr))
 			{
 				//_bufmodel = meshObj;//add yqy180425
+				this->mesh_n_tri_ += meshObj.n_tri_;//add yqy180525  这样mesh_n_tri_就是一个模型的总面数了
+				this->mesh_n_verts_ += meshObj.n_verts_;
 				this->bufmodels.push_back(meshObj);//comment yqy180425
 
 			}
